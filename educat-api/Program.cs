@@ -16,6 +16,7 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 
 //Services
 builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<EmailService>();
 
 var app = builder.Build();
 
