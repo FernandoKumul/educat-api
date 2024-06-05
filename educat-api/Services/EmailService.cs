@@ -9,7 +9,7 @@ namespace educat_api.Services
         private readonly string _apiKey = "5e0b68cfbb2c5534a846d81f4d5ece92";
         private readonly string _apiSecret = "58b098e691c007c8353836ba6d69b03c";
 
-        public async Task SendEmail(string email, string token, string fullName)
+        public async Task SendVerificationEmail(string email, string token, string fullName)
         {
             try
             {
