@@ -1,10 +1,11 @@
 ﻿using Domain.DTOs.Auth;
-using Domain.Entities;
 using Domain.Utilities;
 using educat_api.Context;
+using Mailjet.Client.Resources;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using UserModel = Domain.Entities.User; 
 
 namespace educat_api.Services
 {
@@ -16,7 +17,7 @@ namespace educat_api.Services
             _context = context;
         }
 
-        public async Task<User> Register(UserInDTO user)
+        public async Task<UserModel> Register(UserInDTO user)
         {
             try
             {
@@ -25,7 +26,7 @@ namespace educat_api.Services
                 {
                     throw new Exception("El correo ya está registrado en la base de datos.");
                 }
-                var newUser = new User
+                var newUser = new UserModel
                 {
                     Name = user.Name,
                     Email = user.Email,
@@ -41,6 +42,29 @@ namespace educat_api.Services
             {
                 throw new Exception($"Error al registrar usuario: {e.Message}", e.InnerException);
             }
+        }
+
+        public async Task<bool> UpdateUserVerification(int userId)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.PkUser == userId) 
+                    ?? throw new Exception("Usuario no encontrado");
+                
+                if (user.ValidatedEmail)
+                {
+                    return false;
+                }
+
+                user.ValidatedEmail = true;
+                await _context.SaveChangesAsync();
+                return true;
+
+            } catch (Exception)
+            {
+                throw;
+            }
+
         }
 
         public static string EncryptString(string str)
