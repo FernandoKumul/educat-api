@@ -31,7 +31,7 @@ namespace educat_api.Controllers
             try
             {
                 User newUser = await _service.Register(user);
-                var token = GenerateToken(newUser); //Generar el token para verificar (cambiar)
+                var token = GenerateToken(newUser);
                 await _emailService.SendVerificationEmail(newUser.Email, token, newUser.Name + ' ' + newUser.LastName);
 
                 return Ok(new Response<User>(true, "Usuario creado", newUser));
