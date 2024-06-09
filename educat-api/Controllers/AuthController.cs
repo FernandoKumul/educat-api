@@ -31,7 +31,7 @@ namespace educat_api.Controllers
             try
             {
                 User newUser = await _service.Register(user);
-                var token = GenerateToken(newUser);
+                var token = GenerateToken(newUser, 1440);
                 await _emailService.SendVerificationEmail(newUser.Email, token, newUser.Name + ' ' + newUser.LastName);
 
                 return Ok(new Response<User>(true, "Usuario creado", newUser));
@@ -88,7 +88,28 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, "Token Inválido:: " + ex.Message));
             }
         }
-        private string GenerateToken(User user)
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDTO login)
+        {
+            try
+            {
+                var user = await _service.Login(login);
+
+                if (user == null)
+                {
+                    return BadRequest(new Response<User>(false, "Correo o contraseña incorrectos"));
+                }
+
+                string token = GenerateToken(user, 120);
+                return Ok(new Response<object>(true, "Inicio de sesión exitoso", new { token }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
+            }
+        }
+        private string GenerateToken(User user, int durationMin)
         {
             var claims = new[]
             {
@@ -100,14 +121,13 @@ namespace educat_api.Controllers
 
             var SecurityToken = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: DateTime.Now.AddMinutes(durationMin),
                 signingCredentials: creds
             );
 
             string token = new JwtSecurityTokenHandler().WriteToken(SecurityToken);
             return token;
         }
-
 
     }
 }

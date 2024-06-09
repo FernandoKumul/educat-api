@@ -1,11 +1,10 @@
 ﻿using Domain.DTOs.Auth;
+using Domain.Entities;
 using Domain.Utilities;
 using educat_api.Context;
-using Mailjet.Client.Resources;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
-using UserModel = Domain.Entities.User; 
 
 namespace educat_api.Services
 {
@@ -17,7 +16,7 @@ namespace educat_api.Services
             _context = context;
         }
 
-        public async Task<UserModel> Register(UserInDTO user)
+        public async Task<User> Register(UserInDTO user)
         {
             try
             {
@@ -26,7 +25,7 @@ namespace educat_api.Services
                 {
                     throw new Exception("El correo ya está registrado en la base de datos.");
                 }
-                var newUser = new UserModel
+                var newUser = new User
                 {
                     Name = user.Name,
                     Email = user.Email,
@@ -44,6 +43,23 @@ namespace educat_api.Services
             }
         }
 
+        public async Task<User?> Login(LoginDTO loginData)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginData.Email && u.Password == EncryptString(loginData.Password));
+
+                if (user != null && !user.ValidatedEmail)
+                {
+                    throw new Exception("Su cuenta existe, pero su correo no está verificado");
+                }
+                return user;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
         public async Task<bool> UpdateUserVerification(int userId)
         {
             try
