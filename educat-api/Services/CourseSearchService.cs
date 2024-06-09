@@ -16,7 +16,7 @@ namespace educat_api.Services
         public async Task<IEnumerable<CourseSearchDTO>> Search(string query)
         {
             var resultQuery =  _context.Courses
-                .Where(c => c.Title.Contains(query))
+                .Where(c => c.Title.Contains(query) && c.Active == true)
                 .Select(c => new CourseSearchDTO
                 {
                     PkCourse = c.PkCourse,
