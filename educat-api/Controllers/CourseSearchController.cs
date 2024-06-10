@@ -23,7 +23,7 @@ namespace educat_api.Controllers
             try
             {
                 (object result, int count) = await _service
-                    .Search(PageNumber, PageSize, parameters.Search, category);
+                    .Search(PageNumber, PageSize, parameters.query, category);
 
                 return Ok(new Response<object>(true, "Datos obtenidos exitosamente", new { result, count }));
             }
