@@ -13,69 +13,51 @@ namespace educat_api.Services
             _context = context;
         }
 
-        public async Task<(IEnumerable<CourseSearchDTO>, int)> Search(int pageNumber,int pageSize, string query)
+        public async Task<(IEnumerable<CourseSearchDTO>, int)> Search(int pageNumber, int pageSize, string query)
         {
             int skip = (pageNumber - 1) * pageSize;
 
-            var resultQuery =  _context.Courses
-                .Where(c => c.Title.Contains(query) && c.Active == true)
-                .Select(c => new CourseSearchDTO
-                {
-                    PkCourse = c.PkCourse,
-                    Title = c.Title,
-                    Difficulty = c.Difficulty,
-                    Price = c.Price,
-                    FKInstructor = c.FKInstructor,
-                    FkCategory = c.FkCategory
-                });
-
-            var queryInstructor =  _context.Instructors
+            var resultSearch = await _context.Courses
+                .Where(c => (c.Title.Contains(query) || (c.Tags != null && c.Tags.Contains(query))) && c.Active == true)
+                .Join(
+                    _context.Instructors,
+                    c => c.FKInstructor,
+                    i => i.PkInstructor,
+                    (c, i) => new { c, i }
+                )
                 .Join(
                     _context.Users,
-                    i => i.FkUser,
+                    ci => ci.i.FkUser,
                     u => u.PkUser,
-                    (i, u) => new { i, u }
-                )
-                .Where(iu => iu.i.PkInstructor == resultQuery.First().FKInstructor);
-
-            var queryCategory = _context.Categories
-                .Join(
-                    _context.Courses,
-                    c => c.PkCategory,
-                    fc => fc.FkCategory,
-                    (c, fc) => new { c, fc }
-                )
-                .Where(cc => cc.c.PkCategory == resultQuery.First().FkCategory);
-
-            var resultSearch = await resultQuery
-                .Join(
-                    queryInstructor,
-                    r => r.FKInstructor,
-                    qi => qi.i.PkInstructor,
-                    (r, qi) => new { r, qi }
+                    (ci, u) => new { ci.c, ci.i, InstructorName = u.Name }
                 )
                 .Join(
-                    queryCategory,
-                    rqi => rqi.r.FkCategory,
-                    qc => qc.c.PkCategory,
-                    (rqi, qc) => new CourseSearchDTO
+                    _context.Categories,
+                    ciu => ciu.c.FkCategory,
+                    cat => cat.PkCategory,
+                    (ciu, cat) => new CourseSearchDTO
                     {
-                        PkCourse = rqi.r.PkCourse,
-                        Title = rqi.r.Title,
-                        Difficulty = rqi.r.Difficulty,
-                        Price = rqi.r.Price,
-                        FKInstructor = rqi.r.FKInstructor,
-                        InstructorName = rqi.qi.u.Name,
-                        FkCategory = rqi.r.FkCategory,
-                        CategoryName = qc.c.Name
+                        PkCourse = ciu.c.PkCourse,
+                        Title = ciu.c.Title,
+                        Difficulty = ciu.c.Difficulty,
+                        Price = ciu.c.Price,
+                        Active = ciu.c.Active,
+                        Tags = ciu.c.Tags,
+                        FKInstructor = ciu.c.FKInstructor,
+                        InstructorName = ciu.InstructorName,
+                        FkCategory = ciu.c.FkCategory,
+                        CategoryName = cat.Name
                     }
                 )
                 .Skip(skip)
                 .Take(pageSize)
                 .ToListAsync();
 
-            var count = await resultQuery.CountAsync();
-                
+
+            var count = await _context.Courses
+                .Where(c => c.Title.Contains(query) && c.Active == true)
+                .CountAsync();
+
             return (resultSearch, count);
 
         }

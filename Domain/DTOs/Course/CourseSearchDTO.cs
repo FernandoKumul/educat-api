@@ -8,7 +8,8 @@ namespace Domain.DTOs.Course
         public string? Difficulty { get; set; }
         public decimal? Price { get; set; }
         public bool? Active { get; set; }
-        public int FKInstructor { get; set; }
+        public string? Tags { get; set; }
+        public int? FKInstructor { get; set; }
         public string? InstructorName { get; set; }
         public int? FkCategory { get; set; }
         public string? CategoryName { get; set; }
