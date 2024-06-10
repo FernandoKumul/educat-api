@@ -13,7 +13,7 @@ namespace educat_api.Services
             _context = context;
         }
 
-        public async Task<(IEnumerable<CourseSearchDTO>, int)> Search(int pageNumber, int pageSize, string query)
+        public async Task<(IEnumerable<CourseSearchDTO>, int)> Search(int pageNumber, int pageSize, string query, string category)
         {
             int skip = (pageNumber - 1) * pageSize;
 
@@ -52,14 +52,17 @@ namespace educat_api.Services
                 .Skip(skip)
                 .Take(pageSize)
                 .ToListAsync();
+            if (category == "all" || category == null)
+            {
+                var count = resultSearch.Count;
+                return (resultSearch, count);
 
-
-            var count = await _context.Courses
-                .Where(c => c.Title.Contains(query) && c.Active == true)
-                .CountAsync();
-
-            return (resultSearch, count);
-
+            } else
+            {
+                var filteredCategories = resultSearch.Where(c => c.CategoryName == category);
+                var count = filteredCategories.Count();
+                return (filteredCategories, count);
+            }
         }
     }
 }
