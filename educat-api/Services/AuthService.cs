@@ -1,4 +1,5 @@
 ﻿using Domain.DTOs.Auth;
+using Domain.DTOs.User;
 using Domain.Entities;
 using Domain.Utilities;
 using educat_api.Context;
@@ -81,6 +82,27 @@ namespace educat_api.Services
                 throw;
             }
 
+        }
+
+        public async Task<UserAuthOutDTO?> GetAuthUserById(int id)
+        {
+            try
+            {
+                return await _context.Users.Select(u => new UserAuthOutDTO
+                {
+                    PkUser = u.PkUser,
+                    Name = u.Name,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    AvatarUrl = u.AvatarUrl,
+                    IsInstructor = u.IsInstructor,
+                    CreationDate = u.CreationDate
+                }).FirstOrDefaultAsync(u => u.PkUser == id);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al obtener el registro: {e.Message}");
+            }
         }
 
         public static string EncryptString(string str)

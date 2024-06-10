@@ -1,7 +1,9 @@
 ﻿using Domain.DTOs.Auth;
+using Domain.DTOs.User;
 using Domain.Entities;
 using Domain.Utilities;
 using educat_api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -103,6 +105,31 @@ namespace educat_api.Controllers
 
                 string token = GenerateToken(user, 120);
                 return Ok(new Response<object>(true, "Inicio de sesión exitoso", new { token }));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
+            }
+        }
+
+        [HttpGet("verify-token")]
+        [Authorize]
+        public async Task<ActionResult<UserAuthOutDTO>> GetInfoUser()
+        {
+            var id = User.FindFirst("ID")?.Value;
+            if (id == null)
+            {
+                return BadRequest(new Response<string>(false, "Usuario no autenticado"));
+            }
+            try
+            {
+                var userId = int.Parse(id);
+                var user = await _service.GetAuthUserById(userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = $"No se encontró el registro con el ID: {userId}" });
+                }
+                return Ok(new Response<UserAuthOutDTO>(true, "Usuario autenticado", user));
             }
             catch (Exception ex)
             {
