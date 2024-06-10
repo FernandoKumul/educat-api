@@ -1,11 +1,11 @@
 ﻿using Domain.DTOs.Auth;
+using Domain.DTOs.User;
+using Domain.Entities;
 using Domain.Utilities;
 using educat_api.Context;
-using Mailjet.Client.Resources;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
-using UserModel = Domain.Entities.User; 
 
 namespace educat_api.Services
 {
@@ -17,7 +17,7 @@ namespace educat_api.Services
             _context = context;
         }
 
-        public async Task<UserModel> Register(UserInDTO user)
+        public async Task<User> Register(UserInDTO user)
         {
             try
             {
@@ -26,7 +26,7 @@ namespace educat_api.Services
                 {
                     throw new Exception("El correo ya está registrado en la base de datos.");
                 }
-                var newUser = new UserModel
+                var newUser = new User
                 {
                     Name = user.Name,
                     Email = user.Email,
@@ -44,6 +44,23 @@ namespace educat_api.Services
             }
         }
 
+        public async Task<User?> Login(LoginDTO loginData)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginData.Email && u.Password == EncryptString(loginData.Password));
+
+                if (user != null && !user.ValidatedEmail)
+                {
+                    throw new Exception("Su cuenta existe, pero su correo no está verificado");
+                }
+                return user;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
         public async Task<bool> UpdateUserVerification(int userId)
         {
             try
@@ -65,6 +82,27 @@ namespace educat_api.Services
                 throw;
             }
 
+        }
+
+        public async Task<UserAuthOutDTO?> GetAuthUserById(int id)
+        {
+            try
+            {
+                return await _context.Users.Select(u => new UserAuthOutDTO
+                {
+                    PkUser = u.PkUser,
+                    Name = u.Name,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    AvatarUrl = u.AvatarUrl,
+                    IsInstructor = u.IsInstructor,
+                    CreationDate = u.CreationDate
+                }).FirstOrDefaultAsync(u => u.PkUser == id);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al obtener el registro: {e.Message}");
+            }
         }
 
         public static string EncryptString(string str)
