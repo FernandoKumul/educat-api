@@ -52,15 +52,17 @@ namespace educat_api.Services
                 .Skip(skip)
                 .Take(pageSize)
                 .ToListAsync();
+            var count = await _context.Courses
+                .Where(c => (c.Title.Contains(query) || (c.Tags != null && c.Tags.Contains(query))) && c.Active == true)
+                .CountAsync();
+        
             if (category == "all" || category == null)
             {
-                var count = resultSearch.Count;
                 return (resultSearch, count);
 
             } else
             {
                 var filteredCategories = resultSearch.Where(c => c.CategoryName == category);
-                var count = filteredCategories.Count();
                 return (filteredCategories, count);
             }
         }
