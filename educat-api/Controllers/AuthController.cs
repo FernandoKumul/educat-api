@@ -141,7 +141,8 @@ namespace educat_api.Controllers
             var claims = new[]
             {
                 new Claim("ID", user.PkUser.ToString()),
-                new Claim("Email", user.Email)
+                new Claim("Email", user.Email),
+                new Claim("IsInstructor", user.IsInstructor.ToString()),
             };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetSection("JWT:Key").Value ?? ""));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
