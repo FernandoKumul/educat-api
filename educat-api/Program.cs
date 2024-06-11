@@ -1,6 +1,9 @@
 using educat_api.Context;
 using educat_api.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +19,23 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 
 //Services
 builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<CourseSearchService>();
+builder.Services.AddScoped<AuthService>();
+
+//JWT authorized
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
+    options => {
+        Console.WriteLine(builder.Configuration.GetSection("JWT:key").Value);
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("JWT:key").Value ?? "")),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+        };
+    }
+);
 
 var app = builder.Build();
 
@@ -28,6 +47,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseCors(x => x.WithOrigins("*").AllowAnyMethod().AllowAnyHeader());
 
