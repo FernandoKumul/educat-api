@@ -20,6 +20,7 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 //Services
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<CourseSearchService>();
 builder.Services.AddScoped<AuthService>();
 
 //JWT authorized
