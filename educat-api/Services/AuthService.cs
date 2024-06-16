@@ -1,4 +1,5 @@
 ﻿using Domain.DTOs.Auth;
+using Domain.DTOs.Google;
 using Domain.DTOs.User;
 using Domain.Entities;
 using Domain.Utilities;
@@ -102,6 +103,34 @@ namespace educat_api.Services
             catch (Exception e)
             {
                 throw new Exception($"Error al obtener el registro: {e.Message}");
+            }
+        }
+        // Login/register con Google
+        public async Task<User> UserWithGoogle(UserWithGoogleDTO user)
+        {
+            try
+            {
+                var userExists = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+                if (userExists is not null)
+                {
+                    return userExists;
+                }
+                var newUser = new User
+                {
+                    Name = user.Name,
+                    Email = user.Email,
+                    LastName = user.LastName,
+                    AvatarUrl = user.AvatarUrl,
+                    ValidatedEmail = user.ValidatedEmail
+                };
+
+                await _context.Users.AddAsync(newUser);
+                await _context.SaveChangesAsync();
+                return newUser;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al registrar usuario: {e.Message}", e.InnerException);
             }
         }
 
