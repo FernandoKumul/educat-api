@@ -141,17 +141,16 @@ namespace educat_api.Controllers
 
         // Login/register con Google
         [HttpPost("google")]
-        public async Task<IActionResult> UserWithGoogle([FromBody] TokenByGoogleDTO request){
+        public async Task<IActionResult> UserWithGoogle(UserByGoogleDTO request){
             try
             {
-                var payload = await GoogleJsonWebSignature.ValidateAsync(request.Token);
                 var user = new UserWithGoogleDTO
                 {
-                    Email = payload.Email,
-                    Name = payload.GivenName,
-                    LastName = payload.FamilyName,
-                    AvatarUrl = payload.Picture,
-                    ValidatedEmail = payload.EmailVerified
+                    Email = request.Email,
+                    Name = request.GivenName,
+                    LastName = request.FamilyName,
+                    AvatarUrl = request.Picture,
+                    ValidatedEmail = request.EmailVerified
                 };
                 var userEdu = await _service.UserWithGoogle(user);
                 string tokenEdu = GenerateToken(userEdu, 120);
