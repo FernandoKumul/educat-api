@@ -12,8 +12,8 @@ using educat_api.Context;
 namespace educat_api.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20240617001921_Password")]
-    partial class Password
+    [Migration("20240617003941_Password-nullable")]
+    partial class Passwordnullable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
