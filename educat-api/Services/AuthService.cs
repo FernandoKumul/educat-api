@@ -66,9 +66,9 @@ namespace educat_api.Services
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.PkUser == userId) 
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.PkUser == userId)
                     ?? throw new Exception("Usuario no encontrado");
-                
+
                 if (user.ValidatedEmail)
                 {
                     return false;
@@ -78,7 +78,8 @@ namespace educat_api.Services
                 await _context.SaveChangesAsync();
                 return true;
 
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -110,19 +111,24 @@ namespace educat_api.Services
         {
             try
             {
-                var userExists = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
-                if (userExists is not null)
+                var userExists = await _context.Users.AnyAsync(u => u.Email == user.Email);
+                if (userExists)
                 {
-                    return userExists;
+                    var userExiting = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+                    if (userExiting != null)
+                    {
+                        return userExiting;
+                    }
+                    throw new Exception($"Error al obtener el registro");
                 }
                 var newUser = new User
-                {
-                    Name = user.Name,
-                    Email = user.Email,
-                    LastName = user.LastName,
-                    AvatarUrl = user.AvatarUrl,
-                    ValidatedEmail = user.ValidatedEmail
-                };
+                    {
+                        Name = user.Name,
+                        Email = user.Email,
+                        LastName = user.LastName,
+                        AvatarUrl = user.AvatarUrl,
+                        ValidatedEmail = user.ValidatedEmail
+                    };
 
                 await _context.Users.AddAsync(newUser);
                 await _context.SaveChangesAsync();
