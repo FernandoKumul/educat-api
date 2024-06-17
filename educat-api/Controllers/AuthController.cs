@@ -153,8 +153,8 @@ namespace educat_api.Controllers
                     ValidatedEmail = request.EmailVerified
                 };
                 var userEdu = await _service.UserWithGoogle(user);
-                string tokenEdu = GenerateToken(userEdu, 120);
-                return Ok(new Response<object>(true, "Inicio de sesión exitoso", new { tokenEdu }));
+                string token = GenerateToken(userEdu, 120);
+                return Ok(new Response<object>(true, "Inicio de sesión exitoso", new { token }));
 
             }
             catch (Exception ex)

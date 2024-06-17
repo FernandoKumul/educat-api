@@ -111,24 +111,20 @@ namespace educat_api.Services
         {
             try
             {
-                var userExists = await _context.Users.AnyAsync(u => u.Email == user.Email);
-                if (userExists)
-                {
-                    var userExiting = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
-                    if (userExiting != null)
-                    {
-                        return userExiting;
-                    }
-                    throw new Exception($"Error al obtener el registro");
-                }
                 var newUser = new User
-                    {
-                        Name = user.Name,
-                        Email = user.Email,
-                        LastName = user.LastName,
-                        AvatarUrl = user.AvatarUrl,
-                        ValidatedEmail = user.ValidatedEmail
-                    };
+                {
+                    Name = user.Name,
+                    Email = user.Email,
+                    LastName = user.LastName,
+                    AvatarUrl = user.AvatarUrl,
+                    ValidatedEmail = user.ValidatedEmail
+                };
+
+                var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Email == newUser.Email);
+                if (existingUser != null)
+                {
+                    return existingUser;
+                }
 
                 await _context.Users.AddAsync(newUser);
                 await _context.SaveChangesAsync();
