@@ -41,7 +41,7 @@ namespace educat_api.Context
                     .IsRequired()
                     .IsUnicode(false)
                     .HasMaxLength(50);
-                entity.Property(e => e.Password) 
+                entity.Property(e => e.Password)
                     .IsRequired()
                     .IsUnicode(false)
                     .HasMaxLength(100);
