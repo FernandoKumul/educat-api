@@ -42,7 +42,6 @@ namespace educat_api.Context
                     .IsUnicode(false)
                     .HasMaxLength(50);
                 entity.Property(e => e.Password)
-                    .IsRequired()
                     .IsUnicode(false)
                     .HasMaxLength(100);
                 entity.Property(e => e.Email)

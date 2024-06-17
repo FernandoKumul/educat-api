@@ -12,8 +12,8 @@ using educat_api.Context;
 namespace educat_api.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20240617003941_Password-nullable")]
-    partial class Passwordnullable
+    [Migration("20240617072228_PasswordNulleable")]
+    partial class PasswordNulleable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -549,7 +549,6 @@ namespace educat_api.Migrations
                         .HasColumnType("varchar(50)");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)");
