@@ -1,8 +1,10 @@
 ﻿using Domain.DTOs.Auth;
 using Domain.DTOs.User;
+using Domain.DTOs.Google;
 using Domain.Entities;
 using Domain.Utilities;
 using educat_api.Services;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -130,6 +132,30 @@ namespace educat_api.Controllers
                     return NotFound(new { message = $"No se encontró el registro con el ID: {userId}" });
                 }
                 return Ok(new Response<UserAuthOutDTO>(true, "Usuario autenticado", user));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
+            }
+        }
+
+        // Login/register con Google
+        [HttpPost("google")]
+        public async Task<IActionResult> UserWithGoogle(UserByGoogleDTO request){
+            try
+            {
+                var user = new UserWithGoogleDTO
+                {
+                    Email = request.Email,
+                    Name = request.GivenName,
+                    LastName = request.FamilyName,
+                    AvatarUrl = request.Picture,
+                    ValidatedEmail = request.EmailVerified
+                };
+                var userEdu = await _service.UserWithGoogle(user);
+                string token = GenerateToken(userEdu, 120);
+                return Ok(new Response<object>(true, "Inicio de sesión exitoso", new { token }));
+
             }
             catch (Exception ex)
             {

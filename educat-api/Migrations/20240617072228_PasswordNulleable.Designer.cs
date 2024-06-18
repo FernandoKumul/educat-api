@@ -12,8 +12,8 @@ using educat_api.Context;
 namespace educat_api.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    [Migration("20240607182135_InitialMigrate")]
-    partial class InitialMigrate
+    [Migration("20240617072228_PasswordNulleable")]
+    partial class PasswordNulleable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -522,7 +522,6 @@ namespace educat_api.Migrations
                         .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .IsUnicode(false)
                         .HasColumnType("varchar(max)");
 
@@ -548,6 +547,14 @@ namespace educat_api.Migrations
                         .HasMaxLength(50)
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Password")
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<bool>("ValidatedEmail")
+                        .HasColumnType("bit");
 
                     b.HasKey("PkUser");
 

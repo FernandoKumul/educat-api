@@ -1,4 +1,5 @@
 ﻿using Domain.DTOs.Auth;
+using Domain.DTOs.Google;
 using Domain.DTOs.User;
 using Domain.Entities;
 using Domain.Utilities;
@@ -65,9 +66,9 @@ namespace educat_api.Services
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.PkUser == userId) 
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.PkUser == userId)
                     ?? throw new Exception("Usuario no encontrado");
-                
+
                 if (user.ValidatedEmail)
                 {
                     return false;
@@ -77,7 +78,8 @@ namespace educat_api.Services
                 await _context.SaveChangesAsync();
                 return true;
 
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -102,6 +104,35 @@ namespace educat_api.Services
             catch (Exception e)
             {
                 throw new Exception($"Error al obtener el registro: {e.Message}");
+            }
+        }
+        // Login/register con Google
+        public async Task<User> UserWithGoogle(UserWithGoogleDTO user)
+        {
+            try
+            {
+                var newUser = new User
+                {
+                    Name = user.Name,
+                    Email = user.Email,
+                    LastName = user.LastName,
+                    AvatarUrl = user.AvatarUrl,
+                    ValidatedEmail = user.ValidatedEmail
+                };
+
+                var existingUser = await _context.Users.SingleOrDefaultAsync(u => u.Email == newUser.Email);
+                if (existingUser != null)
+                {
+                    return existingUser;
+                }
+
+                await _context.Users.AddAsync(newUser);
+                await _context.SaveChangesAsync();
+                return newUser;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al registrar usuario: {e.Message}", e.InnerException);
             }
         }
 
