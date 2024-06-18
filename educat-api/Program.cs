@@ -22,11 +22,11 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<CourseSearchService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<CourseService>();
 
 //JWT authorized
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     options => {
-        Console.WriteLine(builder.Configuration.GetSection("JWT:key").Value);
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
