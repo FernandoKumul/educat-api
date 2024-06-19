@@ -24,6 +24,6 @@ namespace Domain.DTOs.Course
         public string? LearnText { get; set; }
         public string? Tags { get; set; }
 
-        //public ICollection<UnitEditOutDTO> Units { get; set; } = new List<UnitEditOutDTO>();
+        public ICollection<UnitSaveInDTO> Units { get; set; } = new List<UnitSaveInDTO>();
     }
 }
