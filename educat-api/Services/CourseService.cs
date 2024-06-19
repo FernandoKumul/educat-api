@@ -74,8 +74,11 @@ namespace educat_api.Services
 
             try
             {
-                //var idQuestionAdds = new List<int>();
-                var existingCourse = await _context.Courses.FirstOrDefaultAsync(c => c.PkCourse == courseId && c.Instructor.FkUser == userId);
+                var idUnitsUpdateAndAdd = new List<int>();
+                var existingCourse = await _context.Courses
+                    .Include(c => c.Units)
+                        .ThenInclude(u => u.Lessons)
+                    .FirstOrDefaultAsync(c => c.PkCourse == courseId && c.Instructor.FkUser == userId);
 
                 if (existingCourse is null)
                 {
@@ -97,96 +100,106 @@ namespace educat_api.Services
                 existingCourse.Tags = updatedCourse.Tags;
                 existingCourse.UpdateDate = DateTime.Now;
 
-                //foreach (var updatedQuestion in updatedTest.Questions)
-                //{
-                //    var existingQuestion = existingTest.Questions.FirstOrDefault(q => q.Id == updatedQuestion.Id);
+                foreach(var updatedUnit in  updatedCourse.Units)
+                {
+                    var idLessonsUpdateAndAdd = new List<int>();
+                    var existingUnit = existingCourse.Units.FirstOrDefault(q => q.PkUnit == updatedUnit.PkUnit);
 
-                //    if (existingQuestion != null)
-                //    {
-                //        //Actualizo pregunta
-                //        idQuestionAdds.Add(existingQuestion.Id);
-                //        existingQuestion.QuestionTypeId = updatedQuestion.QuestionTypeId;
-                //        existingQuestion.Description = updatedQuestion.Description;
-                //        existingQuestion.Image = updatedQuestion.Image;
-                //        existingQuestion.Order = updatedQuestion.Order;
-                //        existingQuestion.CaseSensitivity = updatedQuestion.CaseSensitivity;
-                //        existingQuestion.Points = updatedQuestion.Points;
-                //        existingQuestion.Duration = updatedQuestion.Duration;
+                    if (existingUnit != null)
+                    {
+                        //Actualizo unidad existente
+                        existingUnit.Title = updatedUnit.Title;
+                        existingUnit.Order = updatedUnit.Order;
+                        idUnitsUpdateAndAdd.Add(existingUnit.PkUnit);
 
-                //        foreach (var updatedAnswer in updatedQuestion.Answers)
-                //        {
-                //            var existingAnswer = existingQuestion.Answers.FirstOrDefault(a => a.Id == updatedAnswer.Id);
-                //            if (existingAnswer != null)
-                //            {
-                //                //Actualizar respuesta
-                //                existingAnswer.Text = updatedAnswer.Text;
-                //                existingAnswer.Correct = updatedAnswer.Correct;
-                //            }
-                //            else
-                //            {
-                //                // Insertar nueva respuesta
-                //                var newAnswer = new QuestionAnswer
-                //                {
-                //                    Correct = updatedAnswer.Correct,
-                //                    Text = updatedAnswer.Text,
-                //                    QuestionId = existingQuestion.Id
-                //                };
-                //                existingQuestion.Answers.Add(newAnswer);
-                //            }
-                //        }
+                        foreach(var updateLesson in updatedUnit.Lessons)
+                        {
+                            var existingLesson = existingUnit.Lessons.FirstOrDefault(l => l.PkLesson == updateLesson.PkLesson);
 
-                //        List<QuestionAnswer> answerList = existingQuestion.Answers.ToList();
-                //        answerList.RemoveAll(q => updatedQuestion.Answers.Exists(uq => uq.Id == q.Id));
-                //        _context.QuestionAnswers.RemoveRange(answerList);
-                //    }
-                //    else
-                //    {
-                //        //Agrega nueva pregunta con respuestas
-                //        var newQuestion = new Question
-                //        {
-                //            TestId = idTest,
-                //            QuestionTypeId = updatedQuestion.QuestionTypeId,
-                //            Description = updatedQuestion.Description,
-                //            Image = updatedQuestion.Image,
-                //            Order = updatedQuestion.Order,
-                //            CaseSensitivity = updatedQuestion.CaseSensitivity,
-                //            Points = updatedQuestion.Points,
-                //            Duration = updatedQuestion.Duration
-                //        };
-                //        await _context.Questions.AddAsync(newQuestion);
-                //        await _context.SaveChangesAsync();
-                //        idQuestionAdds.Add(newQuestion.Id);
+                            if(existingLesson != null)
+                            {
+                                //Actualizar lección
+                                existingLesson.Text = updateLesson.Text;
+                                existingLesson.Title = updateLesson.Title;
+                                existingLesson.VideoUrl = updateLesson.VideoUrl;
+                                existingLesson.Type = updateLesson.Type;
+                                existingLesson.Order = updateLesson.Order;
+                                existingLesson.TimeDuration = updateLesson.TimeDuration;
+                                idLessonsUpdateAndAdd.Add(existingLesson.PkLesson);
 
-                //        foreach (var answer in updatedQuestion.Answers)
-                //        {
-                //            var newAsnwer = new QuestionAnswer
-                //            {
-                //                QuestionId = newQuestion.Id,
-                //                Text = answer.Text,
-                //                Correct = answer.Correct,
-                //            };
-                //            await _context.QuestionAnswers.AddAsync(newAsnwer);
-                //        }
-                //    }
-                //}
-                //await _context.SaveChangesAsync();
+                            } else
+                            {
+                                //Agregar nueva lección
+                                Lesson newLesson = new Lesson
+                                {
+                                    Fkunit = existingUnit.PkUnit,
+                                    Type = updateLesson.Type,
+                                    Title = updateLesson.Title,
+                                    VideoUrl = updateLesson.VideoUrl,
+                                    Text = updateLesson.Text,
+                                    TimeDuration = updateLesson.TimeDuration,
+                                    Order = updateLesson.Order,
+                                    CretionDate = DateTime.Now
+                                };
 
-                ////Borra las preguntas y respuestas que ya no incluya
-                //var idQuestionDelete = new List<int>();
-                //foreach (var question in existingTest.Questions)
-                //{
-                //    if (!idQuestionAdds.Contains(question.Id)) idQuestionDelete.Add(question.Id);
-                //}
+                                await _context.Lessons.AddAsync(newLesson);
+                                idLessonsUpdateAndAdd.Add(newLesson.PkLesson);
 
-                //var answersToDelete = await _context.QuestionAnswers
-                //    .Where(a => idQuestionDelete.Contains(a.QuestionId))
-                //    .ToListAsync();
-                //_context.QuestionAnswers.RemoveRange(answersToDelete);
+                            }
+                        }
 
-                //var questionsToDelete = await _context.Questions
-                //    .Where(q => idQuestionDelete.Contains(q.Id))
-                //    .ToListAsync();
-                //_context.Questions.RemoveRange(questionsToDelete);
+                        //Borrar lecciones de la unidad
+                        var lessonToDelete = new List<Lesson>();
+                        foreach (var lesson in existingUnit.Lessons)
+                        {
+                            if (!idLessonsUpdateAndAdd.Contains(lesson.PkLesson)) lessonToDelete.Add(lesson);
+                        }
+
+                        _context.Lessons.RemoveRange(lessonToDelete);
+                    }
+                    else
+                    {
+                        //Agrego nueva unidad
+                        var newUnit = new Unit
+                        {
+                            FkCourse = courseId,
+                            Title = updatedUnit.Title,
+                            Order = updatedUnit.Order,
+                        };
+                        await _context.Units.AddAsync(newUnit);
+                        await _context.SaveChangesAsync();
+                        idUnitsUpdateAndAdd.Add(newUnit.PkUnit);
+                        
+                        //Agregar todas sus lecciones
+                        foreach(var lesson in updatedUnit.Lessons)
+                        {
+                            Lesson newLesson = new Lesson()
+                            {
+                                Fkunit = newUnit.PkUnit,
+                                Type = lesson.Type,
+                                Title = lesson.Title,
+                                VideoUrl = lesson.VideoUrl,
+                                Text = lesson.Text,
+                                TimeDuration = lesson.TimeDuration,
+                                Order = lesson.Order,
+                                CretionDate = DateTime.Now
+                            };
+
+                            await _context.Lessons.AddAsync(newLesson);
+                        }
+                    }
+                    
+                }
+
+                //Borrar unidades y lecciones
+                var UnitsToDelete = new List<Unit>();
+                foreach (var unit in existingCourse.Units)
+                {
+                    if (!idUnitsUpdateAndAdd.Contains(unit.PkUnit)) UnitsToDelete.Add(unit);
+                }
+
+                _context.Units.RemoveRange(UnitsToDelete);
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }
