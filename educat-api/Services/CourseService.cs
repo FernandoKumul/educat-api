@@ -245,13 +245,13 @@ namespace educat_api.Services
                             LastName = c.Instructor.User.LastName,
                             Name = c.Instructor.User.Name
                         },
-                        Units = c.Units.Select(u => new UnitProgramOutDTO
+                        Units = c.Units.OrderBy(u => u.Order).Select(u => new UnitProgramOutDTO
                         {
                             PkUnit = u.PkUnit,
                             FkCourse = u.FkCourse,
                             Title = u.Title,
                             Order = u.Order,
-                            Lessons = u.Lessons.Select(l => new LessonProgramOutDTO
+                            Lessons = u.Lessons.OrderBy(u => u.Order).Select(l => new LessonProgramOutDTO
                             {
                                 PkLesson = l.PkLesson,
                                 Title = l.Title,
