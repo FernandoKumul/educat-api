@@ -125,5 +125,23 @@ namespace educat_api.Controllers
             }
         }
 
+        [HttpGet("public/{id}")]
+        public async Task<IActionResult> GetInfoPublic(int id)
+        {
+            try
+            {
+                var course = await _service.GetInfoPublic(id);
+                if(course is null)
+                {
+                    return NotFound(new Response<string>(false, "Curso no encontrado"));
+                }
+
+                return Ok(new Response<CoursePublicOutDTO>(true, "Curso encontrado exitosamente", course));
+                
+            } catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
+            }
+        }
     }
 }

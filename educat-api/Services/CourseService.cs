@@ -1,6 +1,7 @@
 ﻿using Domain.DTOs.Course;
 using Domain.DTOs.Lesson;
 using Domain.DTOs.Unit;
+using Domain.DTOs.User;
 using Domain.Entities;
 using educat_api.Context;
 using Microsoft.EntityFrameworkCore;
@@ -210,6 +211,73 @@ namespace educat_api.Services
 
             }
 
+        }
+
+        public async Task<CoursePublicOutDTO?> GetInfoPublic(int courseId)
+        {
+            try
+            {
+                var course = await _context.Courses
+                    .Where(c => c.PkCourse == courseId && c.Active == true)
+                    .Select(c => new CoursePublicOutDTO
+                    {
+                        PkCourse = c.PkCourse,
+                        FKInstructor = c.FKInstructor,
+                        FkCategory = c.FkCategory,
+                        Title = c.Title,
+                        Summary = c.Summary,
+                        Language = c.Language,
+                        Difficulty = c.Difficulty,
+                        Price = c.Price,
+                        VideoPresentation = c.VideoPresentation,
+                        Cover = c.Cover,
+                        Requeriments = c.Requeriments,
+                        Description = c.Description,
+                        LearnText = c.LearnText,
+                        Tags = c.Tags,
+                        Active = c.Active,
+                        CretionDate = c.CretionDate,
+                        UpdateDate = c.UpdateDate,
+                        Instructor = new UserMinOutDTO
+                        {
+                            PkUser = c.Instructor.FkUser,
+                            AvatarUrl = c.Instructor.User.AvatarUrl,
+                            LastName = c.Instructor.User.LastName,
+                            Name = c.Instructor.User.Name
+                        },
+                        Units = c.Units.OrderBy(u => u.Order).Select(u => new UnitProgramOutDTO
+                        {
+                            PkUnit = u.PkUnit,
+                            FkCourse = u.FkCourse,
+                            Title = u.Title,
+                            Order = u.Order,
+                            Lessons = u.Lessons.OrderBy(u => u.Order).Select(l => new LessonProgramOutDTO
+                            {
+                                PkLesson = l.PkLesson,
+                                Title = l.Title,
+                                Fkunit = l.Fkunit,
+                                Order = l.Order,
+                                TimeDuration = l.TimeDuration,
+                                Type = l.Type,
+                                CretionDate = l.CretionDate
+                            }).ToList()
+                        }).ToList()
+
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (course is null) return null;
+
+                //Traer las calificaciones
+
+                int students = await _context.Payments.CountAsync(c => c.FkCourse == courseId);
+                course.NumberStudents = students;
+
+                return course;
+            } catch (Exception)
+            {
+                throw;
+            }
         }
     }
 }
