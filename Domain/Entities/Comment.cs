@@ -22,7 +22,7 @@ namespace Domain.Entities
         [ForeignKey("Lesson")]
         public int? FkLesson { get; set; }
         public string Text { get; set; } = null!;
-        public decimal Score { get; set; }
+        public decimal? Score { get; set; }
         public DateTime CretionDate { get; set; } = DateTime.Now;
 
 
