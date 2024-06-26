@@ -18,11 +18,7 @@ namespace educat_api.Services
             {
                 var instructor = await _context.Instructors
                     .Include(i => i.User)
-                    .SingleOrDefaultAsync(i => i.User.PkUser == id);
-                if (instructor == null)
-                {
-                    throw new Exception("No se encontró el instructor");
-                }
+                    .SingleOrDefaultAsync(i => i.User.PkUser == id) ?? throw new Exception("No se encontró el instructor");
                 var instructorData = new InstructorInfoDTO
                 {
                     PkInstructor = instructor.PkInstructor,
@@ -42,6 +38,34 @@ namespace educat_api.Services
                     ValidatedEmail = instructor.User.ValidatedEmail
                 };
                 return instructorData;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<InstructorInfoDTO> updateInstructor(InstructorInfoDTO request)
+        {
+            try
+            {
+                var instructor = await _context.Instructors
+                    .Include(i => i.User)
+                    .SingleOrDefaultAsync(i => i.PkInstructor == request.PkInstructor) ?? throw new Exception("No se encontró el instructor");
+                instructor.Occupation = request.Occupation;
+                instructor.FacebookUser = request.FacebookUser;
+                instructor.YoutubeUser = request.YoutubeUser;
+                instructor.LinkediId = request.LinkediId;
+                instructor.TwitterUser = request.TwitterUser;
+                instructor.EmailPaypal = request.EmailPaypal;
+                instructor.User.Name = request.Name;
+                instructor.User.LastName = request.LastName;
+                instructor.User.Email = request.Email;
+                instructor.User.AvatarUrl = request.AvatarUrl;
+                instructor.User.Description = request.Description;
+                instructor.User.ValidatedEmail = request.ValidatedEmail;
+                _context.Instructors.Update(instructor);
+                await _context.SaveChangesAsync();
+                return request;
             }
             catch (Exception)
             {
