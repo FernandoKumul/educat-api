@@ -10,12 +10,10 @@ namespace Domain.DTOs.Instructor
         public string? LinkediId { get; set; }
         public string? TwitterUser { get; set; }
         public string? EmailPaypal { get; set; }
-        public DateTime CreationDate { get; set; }
         public string Name { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string? AvatarUrl { get; set; }
         public string? Description { get; set; }
-        public bool ValidatedEmail { get; set; } = false;
     }
 }

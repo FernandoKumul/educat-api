@@ -29,13 +29,11 @@ namespace educat_api.Services
                     LinkediId = instructor.LinkediId,
                     TwitterUser = instructor.TwitterUser,
                     EmailPaypal = instructor.EmailPaypal,
-                    CreationDate = instructor.CreationDate,
                     Name = instructor.User.Name,
                     LastName = instructor.User.LastName,
                     Email = instructor.User.Email,
                     AvatarUrl = instructor.User.AvatarUrl,
                     Description = instructor.User.Description,
-                    ValidatedEmail = instructor.User.ValidatedEmail
                 };
                 return instructorData;
             }
@@ -62,7 +60,6 @@ namespace educat_api.Services
                 instructor.User.Email = request.Email;
                 instructor.User.AvatarUrl = request.AvatarUrl;
                 instructor.User.Description = request.Description;
-                instructor.User.ValidatedEmail = request.ValidatedEmail;
                 _context.Instructors.Update(instructor);
                 await _context.SaveChangesAsync();
                 return request;
