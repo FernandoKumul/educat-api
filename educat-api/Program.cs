@@ -25,6 +25,7 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<CourseSearchService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CourseService>();
+builder.Services.AddScoped<InstructorService>();
 
 //JWT authorized
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
