@@ -11,9 +11,11 @@ namespace educat_api.Services
     public class CourseService
     {
         private readonly AppDBContext _context;
-        public CourseService(AppDBContext context)
+        private readonly CommentService _commentService;
+        public CourseService(AppDBContext context, CommentService commentService)
         {
             _context = context;
+            _commentService = commentService;
         }
 
         public async Task<CourseEditOutDTO?> GetToEdit(int courseId, int userId)
@@ -269,6 +271,7 @@ namespace educat_api.Services
                 if (course is null) return null;
 
                 //Traer las calificaciones
+                course.Rating = await _commentService.GetAvgReviewsByCourse(courseId);
 
                 int students = await _context.Payments.CountAsync(c => c.FkCourse == courseId);
                 course.NumberStudents = students;

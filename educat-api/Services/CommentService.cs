@@ -21,7 +21,7 @@ namespace educat_api.Services
                 bool hasCourseByUser = await _context.Payments
                     .AnyAsync(p => p.FkCourse == review.courseId && p.FkUser == userId);
 
-                if(!hasCourseByUser) 
+                if (!hasCourseByUser)
                 {
                     throw new Exception("No tienes este curso comprado");
                 }
@@ -29,7 +29,7 @@ namespace educat_api.Services
                 bool hasComment = await _context.Comments
                     .AnyAsync(c => c.FkUser == userId && c.FkCourse == review.courseId);
 
-                if(hasComment)
+                if (hasComment)
                 {
                     throw new Exception("No puedes agregar más de un comentario por curso");
                 }
@@ -40,7 +40,7 @@ namespace educat_api.Services
                     Text = review.Text,
                     Score = review.Score
                 };
-                
+
                 await _context.Comments.AddAsync(newReview);
                 await _context.SaveChangesAsync();
 
@@ -68,11 +68,11 @@ namespace educat_api.Services
                 var comment = await _context.Comments
                     .FirstOrDefaultAsync(c => c.PkComment == commentId && c.FkUser == userId);
 
-                if(comment is null)
+                if (comment is null)
                 {
                     return false;
                 }
-                
+
                 _context.Comments.Remove(comment);
                 await _context.SaveChangesAsync();
 
@@ -89,7 +89,7 @@ namespace educat_api.Services
             {
                 var reviewFind = await _context.Comments.FirstOrDefaultAsync(c => c.PkComment == reviewId && c.FkUser == userId);
 
-                if(reviewFind is null)
+                if (reviewFind is null)
                 {
                     return null;
                 }
@@ -117,29 +117,61 @@ namespace educat_api.Services
             }
         }
 
-        public async Task<IEnumerable<CommentUserOutDTO>> GetReviews(int courseId)
+        public async Task<object> GetReviews(int courseId, int pageNumber, int pageSize)
         {
             try
             {
+                int skip = (pageNumber - 1) * pageSize;
+
+                //Verificar si el curso está activo
                 var reviews = await _context.Comments
+                                .Where(c => c.FkCourse == courseId)
+                                .GroupJoin(
+                                    _context.Likes,
+                                    c => c.PkComment,
+                                    l => l.PkLike,
+                                    (c, likes) => new { Comment = c, LikesCount = likes.Count()}
+                                )
+                                .OrderByDescending(x => x.LikesCount)
+                                .Skip(skip)
+                                .Take(pageSize)
                                 .Select(c => new CommentUserOutDTO
                                 {
-                                    PkComment = c.PkComment,
-                                    FkCourse = c.FkCourse,
-                                    FkLesson = c.FkLesson,
-                                    Score = c.Score,
-                                    Text = c.Text,
+                                    PkComment = c.Comment.PkComment,
+                                    FkCourse = c.Comment.FkCourse,
+                                    FkLesson = c.Comment.FkLesson,
+                                    Score = c.Comment.Score,
+                                    Text = c.Comment.Text,
                                     User = new UserMinOutDTO
                                     {
-                                        PkUser = c.User.PkUser,
-                                        AvatarUrl = c.User.AvatarUrl,
-                                        Name = c.User.Name,
-                                        LastName = c.User.LastName,
+                                        PkUser = c.Comment.User.PkUser,
+                                        AvatarUrl = c.Comment.User.AvatarUrl,
+                                        Name = c.Comment.User.Name,
+                                        LastName = c.Comment.User.LastName,
                                     }
                                 })
-                                .Where(c => c.FkCourse == courseId)
                                 .ToListAsync();
-                return reviews;
+
+                var count = await _context.Comments
+                               .CountAsync(c => c.FkCourse == courseId);
+
+                return new { result = reviews, count };
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<decimal> GetAvgReviewsByCourse(int courseId)
+        {
+            try
+            {
+                var average = await _context.Comments
+                    .Where(c => c.FkCourse == courseId)
+                    .AverageAsync(c => c.Score) ?? 0m;
+                Console.WriteLine(average);
+
+                return average;
             } catch (Exception)
             {
                 throw;

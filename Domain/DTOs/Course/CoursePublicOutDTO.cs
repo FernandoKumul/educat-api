@@ -26,7 +26,7 @@ namespace Domain.DTOs.Course
         public string? Description { get; set; }
         public string? LearnText { get; set; }
         public string? Tags { get; set; }
-        public int Rating { get; set; }
+        public decimal Rating { get; set; }
         public int NumberStudents { get; set; }
         public bool Active { get; set; } = false;
         

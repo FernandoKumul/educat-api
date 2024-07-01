@@ -2,6 +2,7 @@
 using Domain.Entities;
 using Domain.Utilities;
 using educat_api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace educat_api.Controllers
@@ -16,6 +17,7 @@ namespace educat_api.Controllers
             _service = service;
         }
 
+        [Authorize]
         [HttpPost("review")]
         public async Task<IActionResult> CreateReview([FromBody] ReviewInDTO newReview)
         {
@@ -43,19 +45,23 @@ namespace educat_api.Controllers
         }
 
         [HttpGet("review")]
-        public async Task<IActionResult> GetReviews([FromQuery(Name = "course")] int courseId)
+        public async Task<IActionResult> GetReviews([FromQuery(Name = "course")] int courseId, [FromQuery] int page, [FromQuery]int limit)
         {
             try
             {
-                var reviews = await _service.GetReviews(courseId);
+                Console.WriteLine($"Limite: {limit}, Pagina: {page}");
 
-                return Ok(new Response<IEnumerable<CommentUserOutDTO>>(true, "Reseñas conseguidas con éxito", reviews));
+                //Las ternarias para dejar el 1 como default
+                var result = await _service.GetReviews(courseId, page < 1 ? 1 : page, limit < 1 ? 10 : limit);
+
+                return Ok(new Response<object>(true, "Reseñas conseguidas con éxito", result));
             } catch (Exception ex)
             {
                 return BadRequest(new Response<string?>(false, ex.Message, ex.InnerException?.Message));
             }
         }
 
+        [Authorize]
         [HttpPut("review/{reviewId}")]
         public async Task<IActionResult> UpdateReview([FromBody] ReviewEditInDTO reviewIn, int reviewId)
         {
@@ -88,6 +94,7 @@ namespace educat_api.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("review/{reviewId}")]
         public async Task<IActionResult> DeleteReview(int reviewId)
         {

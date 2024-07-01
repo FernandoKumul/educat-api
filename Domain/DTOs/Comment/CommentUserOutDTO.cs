@@ -13,6 +13,7 @@ namespace Domain.DTOs.Comment
         public int? FkCourse { get; set; }
         public int? FkLesson { get; set; }
         public string Text { get; set; } = null!;
+        public int Likes { get; set; } = 0;
         public decimal? Score { get; set; }
         public DateTime CretionDate { get; set; } = DateTime.Now;
         public UserMinOutDTO User { get; set; } = null!;

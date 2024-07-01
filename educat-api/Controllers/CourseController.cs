@@ -100,6 +100,8 @@ namespace educat_api.Controllers
         {
             try
             {
+                var userId = User.FindFirst("ID")?.Value;
+                Console.WriteLine("Id: " + userId);
                 var course = await _service.GetInfoPublic(id);
                 if(course is null)
                 {
