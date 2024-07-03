@@ -49,8 +49,6 @@ namespace educat_api.Controllers
         {
             try
             {
-                Console.WriteLine($"Limite: {limit}, Pagina: {page}");
-
                 //Las ternarias para dejar el 1 como default
                 var result = await _service.GetReviews(courseId, page < 1 ? 1 : page, limit < 1 ? 10 : limit);
 
@@ -95,8 +93,8 @@ namespace educat_api.Controllers
         }
 
         [Authorize]
-        [HttpDelete("review/{reviewId}")]
-        public async Task<IActionResult> DeleteReview(int reviewId)
+        [HttpDelete("{commentId}")]
+        public async Task<IActionResult> DeleteReview(int commentId)
         {
             try
             {
@@ -107,7 +105,7 @@ namespace educat_api.Controllers
                     return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
                 }
 
-                var result = await _service.DeleteComment(reviewId, userIdInt);
+                var result = await _service.DeleteComment(commentId, userIdInt);
 
                 if (!result)
                 {
@@ -119,6 +117,30 @@ namespace educat_api.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new Response<string?>(false, ex.Message, ex.InnerException?.Message));
+            }
+        }
+
+        [HttpGet("review/course/{courseId}")]
+        public async Task<IActionResult> GetCourseReviewByUser(int courseId)
+        {
+            try
+            {
+                var userId = User.FindFirst("ID")?.Value;
+
+                if(userId is null)
+                {
+                    return Ok(new Response<CommentUserOutDTO?>(true, "Reseña del usuario dejado en el curso", null));
+                }
+
+                var userIdInt = int.Parse(userId);
+
+                var review = await _service.GetCourseReviewByUser(userIdInt, courseId);
+
+                return Ok(new Response<CommentUserOutDTO?>(true, "Reseña del usuario dejado en el curso", review));
+            } catch (Exception ex)
+            {
+                return BadRequest(new Response<string?>(false, ex.Message, ex.InnerException?.Message));
+
             }
         }
     }

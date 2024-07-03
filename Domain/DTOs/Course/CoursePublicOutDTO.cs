@@ -28,6 +28,7 @@ namespace Domain.DTOs.Course
         public string? Tags { get; set; }
         public decimal Rating { get; set; }
         public int NumberStudents { get; set; }
+        public bool Purchased { get; set; } = false;
         public bool Active { get; set; } = false;
         
         public DateTime CretionDate { get; set; } = DateTime.Now;

@@ -282,5 +282,18 @@ namespace educat_api.Services
                 throw;
             }
         }
+
+        public async Task<bool> HasPurchasedCourse(int courseId, int userId)
+        {
+            try
+            {
+                return await _context.Payments
+                    .AnyAsync(c => c.FkCourse == courseId && c.FkUser == userId);
+
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

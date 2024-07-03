@@ -133,6 +133,7 @@ namespace educat_api.Services
                                     (c, likes) => new { Comment = c, LikesCount = likes.Count()}
                                 )
                                 .OrderByDescending(x => x.LikesCount)
+                                .OrderByDescending(x => x.Comment.PkComment)
                                 .Skip(skip)
                                 .Take(pageSize)
                                 .Select(c => new CommentUserOutDTO
@@ -155,7 +156,9 @@ namespace educat_api.Services
                 var count = await _context.Comments
                                .CountAsync(c => c.FkCourse == courseId);
 
-                return new { result = reviews, count };
+                var rating = await GetAvgReviewsByCourse(courseId);
+
+                return new { result = reviews, count, rating };
             } catch (Exception)
             {
                 throw;
@@ -172,6 +175,42 @@ namespace educat_api.Services
                 Console.WriteLine(average);
 
                 return average;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<CommentUserOutDTO?> GetCourseReviewByUser(int userId, int courseId)
+        {
+            try
+            {
+                var review = await _context.Comments
+                    .Where(c => c.FkCourse == courseId && c.FkUser == userId)
+                    .GroupJoin(
+                        _context.Likes,
+                        c => c.PkComment,
+                        l => l.PkLike,
+                        (c, likes) => new { Comment = c, LikesCount = likes.Count() }
+                    )
+                    .Select(c => new CommentUserOutDTO
+                    {
+                        PkComment = c.Comment.PkComment,
+                        FkCourse = c.Comment.FkCourse,
+                        FkLesson = c.Comment.FkLesson,
+                        Score = c.Comment.Score,
+                        Text = c.Comment.Text,
+                        User = new UserMinOutDTO
+                        {
+                            PkUser = c.Comment.User.PkUser,
+                            AvatarUrl = c.Comment.User.AvatarUrl,
+                            Name = c.Comment.User.Name,
+                            LastName = c.Comment.User.LastName,
+                        }
+                    })
+                    .FirstOrDefaultAsync();
+
+                return review;
             } catch (Exception)
             {
                 throw;
