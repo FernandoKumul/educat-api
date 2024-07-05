@@ -143,6 +143,7 @@ namespace educat_api.Services
                                     FkLesson = c.Comment.FkLesson,
                                     Score = c.Comment.Score,
                                     Text = c.Comment.Text,
+                                    CretionDate = c.Comment.CretionDate,
                                     User = new UserMinOutDTO
                                     {
                                         PkUser = c.Comment.User.PkUser,
