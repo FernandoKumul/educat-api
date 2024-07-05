@@ -26,6 +26,7 @@ builder.Services.AddScoped<CourseSearchService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<CourseService>();
 builder.Services.AddScoped<CommentService>();
+builder.Services.AddScoped<LikeService>();
 
 //JWT authorized
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(

@@ -117,7 +117,7 @@ namespace educat_api.Services
             }
         }
 
-        public async Task<object> GetReviews(int courseId, int pageNumber, int pageSize)
+        public async Task<object> GetReviews(int courseId, int pageNumber, int pageSize, int userId)
         {
             try
             {
@@ -129,11 +129,11 @@ namespace educat_api.Services
                                 .GroupJoin(
                                     _context.Likes,
                                     c => c.PkComment,
-                                    l => l.PkLike,
-                                    (c, likes) => new { Comment = c, LikesCount = likes.Count()}
+                                    l => l.FkComment,
+                                    (c, likes) => new { Comment = c, LikesCount = likes.Count(), UserLike = likes.Any(l => l.FkUser == userId) }
                                 )
                                 .OrderByDescending(x => x.LikesCount)
-                                .OrderByDescending(x => x.Comment.PkComment)
+                                .ThenByDescending(x => x.Comment.PkComment)
                                 .Skip(skip)
                                 .Take(pageSize)
                                 .Select(c => new CommentUserOutDTO
@@ -142,6 +142,8 @@ namespace educat_api.Services
                                     FkCourse = c.Comment.FkCourse,
                                     FkLesson = c.Comment.FkLesson,
                                     Score = c.Comment.Score,
+                                    Likes = c.LikesCount,
+                                    HasLiked = c.UserLike,
                                     Text = c.Comment.Text,
                                     CretionDate = c.Comment.CretionDate,
                                     User = new UserMinOutDTO
@@ -191,7 +193,7 @@ namespace educat_api.Services
                     .GroupJoin(
                         _context.Likes,
                         c => c.PkComment,
-                        l => l.PkLike,
+                        l => l.FkComment,
                         (c, likes) => new { Comment = c, LikesCount = likes.Count() }
                     )
                     .Select(c => new CommentUserOutDTO
@@ -199,6 +201,7 @@ namespace educat_api.Services
                         PkComment = c.Comment.PkComment,
                         FkCourse = c.Comment.FkCourse,
                         FkLesson = c.Comment.FkLesson,
+                        Likes = c.LikesCount,
                         Score = c.Comment.Score,
                         Text = c.Comment.Text,
                         User = new UserMinOutDTO

@@ -14,6 +14,7 @@ namespace Domain.DTOs.Comment
         public int? FkLesson { get; set; }
         public string Text { get; set; } = null!;
         public int Likes { get; set; } = 0;
+        public bool HasLiked { get; set; } = false;
         public decimal? Score { get; set; }
         public DateTime CretionDate { get; set; } = DateTime.Now;
         public UserMinOutDTO User { get; set; } = null!;

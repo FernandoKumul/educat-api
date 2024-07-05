@@ -45,12 +45,18 @@ namespace educat_api.Controllers
         }
 
         [HttpGet("review")]
-        public async Task<IActionResult> GetReviews([FromQuery(Name = "course")] int courseId, [FromQuery] int page, [FromQuery]int limit)
+        public async Task<IActionResult> GetReviews([FromQuery(Name = "course")] int courseId, 
+            [FromQuery] int page, [FromQuery] int limit)
         {
             try
             {
+                var userId = User.FindFirst("ID")?.Value;
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    userIdInt = 0;
+                }
                 //Las ternarias para dejar el 1 como default
-                var result = await _service.GetReviews(courseId, page < 1 ? 1 : page, limit < 1 ? 10 : limit);
+                var result = await _service.GetReviews(courseId, page < 1 ? 1 : page, limit < 1 ? 10 : limit, userIdInt);
 
                 return Ok(new Response<object>(true, "Reseñas conseguidas con éxito", result));
             } catch (Exception ex)
