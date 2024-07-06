@@ -64,36 +64,6 @@ namespace educat_api.Controllers
         [HttpPut("save-draft/{id}")]
         public async Task<ActionResult<Response<string>>> Update(int id, [FromBody] CourseSaveInDTO updateCourse)
         {
-
-            //for (int i = 0; i < updateTest.Questions.Count; i++)
-            //{
-            //    int nCorrect = 0;
-            //    foreach (var answer in updateTest.Questions[i].Answers)
-            //    {
-            //        if (answer.Correct) nCorrect++;
-            //    }
-
-            //    if (nCorrect == 0)
-            //    {
-            //        return BadRequest(new Response<string>(false, $"La pregunta[{i}] no tiene ninguna respuesta correcta"));
-            //    }
-            //}
-
-            //string[] visibilityTypes = { "unlisted", "private", "public" };
-            //if (!Array.Exists(visibilityTypes, color => color == updateTest.Visibility))
-            //{
-            //    return BadRequest(new Response<int>(false, "No está ingresando algún tipo de visibilidad valido"));
-            //}
-
-            //string[] colors = { "green", "blue", "purple", "orange", "yellow", "red" };
-
-            //if (!Array.Exists(colors, color => color == updateTest.Color))
-            //{
-            //    return BadRequest(new Response<int>(false, "No está ingresando algún color valido"));
-            //}
-
-            var payloadId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
             try
             {
                 var userId = User.FindFirst("ID")?.Value;
@@ -130,11 +100,19 @@ namespace educat_api.Controllers
         {
             try
             {
+                var userId = User.FindFirst("ID")?.Value;
                 var course = await _service.GetInfoPublic(id);
                 if(course is null)
                 {
                     return NotFound(new Response<string>(false, "Curso no encontrado"));
                 }
+
+                if (userId is not null)
+                {
+                    var hasCourse = await _service.HasPurchasedCourse(id, int.Parse(userId));
+                    course.Purchased = hasCourse;
+                }
+
 
                 return Ok(new Response<CoursePublicOutDTO>(true, "Curso encontrado exitosamente", course));
                 
