@@ -42,6 +42,7 @@ namespace educat_api.Services
                             PkCourse = ciu.c.PkCourse,
                             Title = ciu.c.Title,
                             Difficulty = ciu.c.Difficulty,
+                            Cover = ciu.c.Cover,
                             Price = ciu.c.Price,
                             Active = ciu.c.Active,
                             Tags = ciu.c.Tags,
