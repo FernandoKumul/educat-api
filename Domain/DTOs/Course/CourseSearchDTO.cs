@@ -6,6 +6,7 @@ namespace Domain.DTOs.Course
         public int PkCourse { get; set; }
         public string? Title { get; set; }
         public string? Difficulty { get; set; }
+        public string? Cover { get; set; }
         public decimal? Price { get; set; }
         public bool? Active { get; set; }
         public string? Tags { get; set; }
