@@ -1,4 +1,5 @@
-﻿using Domain.Utilities;
+﻿using Domain.DTOs.PayPal;
+using Domain.Utilities;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
@@ -41,16 +42,70 @@ namespace educat_api.Services
 
                 response.EnsureSuccessStatusCode();
 
-                string content = await response.Content.ReadAsStringAsync();
-                var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(content);
+                var content = await response.Content.ReadFromJsonAsync<GetTokenInDTO>();
 
-
-                if (data is null) 
+                if (content == null)
                 {
-                    throw new Exception("Token no obtenido");
+                    throw new Exception("Información del toke no obtenido");
                 }
 
-                return data["access_token"].ToString();
+                return content.Access_token;
+            } catch (Exception)
+            {
+                throw;
+            }
+
+        }
+
+        public async Task<object> CreateOrderAsync()
+        {
+            try
+            {
+                //Obtener información del carrito del id del usuario
+
+                var accessToken = await GenerateAccessTokenAsync();
+                var url = $"{_payPalSettings.BaseUri}/v2/checkout/orders";
+                var payload = new
+                {
+                    intent = "CAPTURE",
+                    purchase_units = new[]
+                    {
+                new
+                {
+                    amount = new
+                    {
+                        currency_code = "MXN",
+                        value = "100.00"
+                    }
+                }
+                }
+                };
+                var jsonPayload = JsonSerializer.Serialize(payload);
+
+
+                var request = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Headers =
+                    {
+                        { "Authorization", $"Bearer {accessToken}" }
+                    },
+                    Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
+                };
+
+                using var response = await _httpClient.SendAsync(request);
+
+                response.EnsureSuccessStatusCode();
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(responseContent);
+
+                if (data is null)
+                {
+                    throw new Exception("Data no obtenida");
+                }
+
+
+                return data;
             } catch (Exception)
             {
                 throw;
