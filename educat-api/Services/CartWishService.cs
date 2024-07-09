@@ -33,10 +33,10 @@ namespace educat_api.Services
                             FkCategory = c.Course.FkCategory,
                             FKInstructor = c.Course.FKInstructor,
                             Active = c.Course.Active,
-                            Summary = c.Course.Summary,
+                            Summary = c.Course.Summary ?? "",
                             Title = c.Course.Title,
                             Price = c.Course.Price,
-                            Cover = c.Course.Cover,
+                            Cover = c.Course.Cover ?? "",
                             CretionDate = c.Course.CretionDate,
                             UpdateDate = c.Course.UpdateDate
                         }

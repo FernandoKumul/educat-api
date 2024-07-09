@@ -9,6 +9,10 @@ namespace educat_api.Controllers
     public class TestController : ControllerBase
     {
         private readonly EmailService _emailService;
+        private readonly HttpClient _httpClient = new()
+        {
+            BaseAddress = new Uri("https://jsonplaceholder.typicode.com"),
+        };
         public TestController(EmailService emailService)
         {
             _emailService = emailService;
@@ -25,6 +29,20 @@ namespace educat_api.Controllers
             {
                 return BadRequest(new Response<string>(false, ex.Message));
             }
+        }
+
+        [HttpGet("api-http")]
+        public async Task<IActionResult> GetAsync()
+        {
+            using HttpResponseMessage response = await _httpClient.GetAsync("todos/3");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadAsStringAsync();
+                return Ok(data);
+            }
+
+            return StatusCode((int)response.StatusCode, response.ReasonPhrase);
         }
     }
 }

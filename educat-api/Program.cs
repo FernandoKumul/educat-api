@@ -1,3 +1,4 @@
+using Domain.Utilities;
 using educat_api.Context;
 using educat_api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,6 +20,9 @@ Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection")
 builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.Configure<PayPalSettings>(builder.Configuration.GetSection("PayPal"));
+
+
 //Services
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<EmailService>();
@@ -29,6 +33,8 @@ builder.Services.AddScoped<CommentService>();
 builder.Services.AddScoped<LikeService>();
 builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<CartWishService>();
+builder.Services.AddScoped<PaymentService>();
+
 
 //JWT authorized
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
