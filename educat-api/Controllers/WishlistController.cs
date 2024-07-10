@@ -62,9 +62,9 @@ namespace educat_api.Controllers
             }
         }
 
-        [HttpDelete("{wishlistId}")]
+        [HttpDelete("course/{courseId}")]
         [Authorize]
-        public async Task<IActionResult> DeleteWishlistItem(int wishlistId)
+        public async Task<IActionResult> DeleteWishlistItem(int courseId)
         {
             try
             {
@@ -75,9 +75,9 @@ namespace educat_api.Controllers
                     return Forbid("Token no valido");
                 }
 
-                await _service.DeleteWishListItem(userIdInt, wishlistId);
+                await _service.DeleteWishListItem(userIdInt, courseId);
 
-                return Ok(new Response<string>(true, "Artículo de la lista de deseos eliminado exitosamente", ""));
+                return Ok(new Response<CartWishOutDTO>(true, "Artículo de la lista de deseos eliminado exitosamente"));
             }
             catch (Exception ex)
             {

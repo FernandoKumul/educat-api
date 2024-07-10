@@ -196,18 +196,18 @@ namespace educat_api.Services
                 throw;
             }
         }
-        public async Task DeleteWishListItem(int userid, int wishItemId)
+        public async Task DeleteWishListItem(int userid, int courseId)
         {
             try
             {
                 var wishItem = await _context.CartWishList
-                    .FirstOrDefaultAsync(c => c.PkCartWishList == wishItemId && c.Type == "wish" && c.FkUser == userid);
+                    .FirstOrDefaultAsync(c => c.FkCourse == courseId && c.Type == "wish" && c.FkUser == userid);
 
                 if (wishItem is null)
                 {
                     throw new Exception("Item de la lista de deseos no encontrado");
                 }
-
+                
                 _context.CartWishList.Remove(wishItem);
                 await _context.SaveChangesAsync();
             } catch (Exception)
