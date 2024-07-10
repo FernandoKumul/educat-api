@@ -16,7 +16,7 @@ namespace educat_api.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpPost("order")]
         [Authorize]
         public async Task<IActionResult> CreateOrder()
         {
