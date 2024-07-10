@@ -116,5 +116,104 @@ namespace educat_api.Services
                 throw;
             }
         }
+
+        public async Task<IEnumerable<CartItemOutDTO>> GetWishListByUserId(int userId)
+        {
+            try
+            {
+                var wishItems = await _context.CartWishList
+                    .Where(c => c.Type == "wish" && c.FkUser == userId)
+                    .Select(c => new CartItemOutDTO
+                    {
+                        PkCartWishList = c.PkCartWishList,
+                        FkUser = c.FkUser,
+                        FkCourse = c.FkCourse,
+                        Type = c.Type,
+                        Course = new CourseMinOutDTO
+                        {
+                            PkCourse = c.Course.PkCourse,
+                            FkCategory = c.Course.FkCategory,
+                            FKInstructor = c.Course.FKInstructor,
+                            Active = c.Course.Active,
+                            Summary = c.Course.Summary,
+                            Title = c.Course.Title,
+                            Price = c.Course.Price,
+                            Cover = c.Course.Cover,
+                            CretionDate = c.Course.CretionDate,
+                            UpdateDate = c.Course.UpdateDate
+                        }
+                    })
+                    .ToListAsync();
+
+                return wishItems;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<CartWishOutDTO> CreateWishListItem(int userId, int courseId)
+        {
+            try
+            {
+                bool findCourse = await _context.Courses
+                    .AnyAsync(c => c.PkCourse == courseId && c.Active == true);
+
+                if(!findCourse)
+                {
+                    throw new Exception("Curso no encontrado");
+                }
+
+                bool findWishItem = await _context.CartWishList
+                    .AnyAsync(c => c.FkUser == userId && c.FkCourse == courseId && c.Type == "wish");
+
+                if(findWishItem)
+                {
+                    throw new Exception("No se permite duplicados en la lista de deseos");
+                }
+
+                CartWishList newWishItem = new()
+                {
+                    FkUser = userId,
+                    FkCourse = courseId,
+                    Type = "wish"
+                };
+
+                await _context.CartWishList.AddAsync(newWishItem);
+                await _context.SaveChangesAsync();
+
+                var wishItemDTO = new CartWishOutDTO
+                {
+                    PkCartWishList = newWishItem.PkCartWishList,
+                    FkCourse = newWishItem.FkCourse,
+                    FkUser = newWishItem.FkCourse,
+                    Type = newWishItem.Type,
+                    CreationDate = newWishItem.CreationDate
+                };
+
+                return wishItemDTO;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task DeleteWishListItem(int userid, int wishItemId)
+        {
+            try
+            {
+                var wishItem = await _context.CartWishList
+                    .FirstOrDefaultAsync(c => c.PkCartWishList == wishItemId && c.Type == "wish" && c.FkUser == userid);
+
+                if (wishItem is null)
+                {
+                    throw new Exception("Item de la lista de deseos no encontrado");
+                }
+
+                _context.CartWishList.Remove(wishItem);
+                await _context.SaveChangesAsync();
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
