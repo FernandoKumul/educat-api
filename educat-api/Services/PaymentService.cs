@@ -1,6 +1,9 @@
 ﻿using Domain.DTOs.PayPal;
+using Domain.Entities;
 using Domain.Utilities;
+using educat_api.Context;
 using Google.Apis.Auth.OAuth2;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 using System.Text;
@@ -12,14 +15,19 @@ namespace educat_api.Services
     {
         private readonly PayPalSettings _payPalSettings;
         private readonly HttpClient _httpClient;
+        private readonly AppDBContext _context;
+        private readonly CartWishService _cartWishService;
 
-        public PaymentService(IOptions<PayPalSettings> settings)
+        public PaymentService(IOptions<PayPalSettings> settings, AppDBContext context, CartWishService cartWishService)
         {
             _payPalSettings = settings.Value;
             _httpClient = new HttpClient
             {
                 BaseAddress = new Uri(settings.Value.BaseUri)
             };
+            _context = context;
+            _cartWishService = cartWishService;
+
         }
 
         public async Task<string> GenerateAccessTokenAsync()
@@ -57,7 +65,7 @@ namespace educat_api.Services
 
         }
 
-        public async Task<object> CreateOrderAsync()
+        public async Task<object> CreateOrderAsync(int userId)
         {
             try
             {
@@ -65,21 +73,35 @@ namespace educat_api.Services
 
                 var accessToken = await GenerateAccessTokenAsync();
                 var url = $"{_payPalSettings.BaseUri}/v2/checkout/orders";
-                var payload = new
+
+                var cartItems = await _cartWishService.GetCartItemsByUserId(userId);
+
+                if(!cartItems.Any())
                 {
-                    intent = "CAPTURE",
-                    purchase_units = new[]
-                    {
-                new
+                    throw new Exception("El carrito está vacío, no tienes algo que comprar");
+                }
+
+                decimal totalAmount = 0;
+
+                foreach (var cartItem in cartItems)
                 {
-                    amount = new
+                    totalAmount += cartItem.Course.Price ?? 0;
+                }
+
+                var payload = new CreateOrderOutDTO
+                {
+                    purchase_units = new PurchaseUnits[]
                     {
-                        currency_code = "MXN",
-                        value = "100.00"
+                        new PurchaseUnits
+                        {
+                            amount = new AmountCreateOrder
+                            {
+                                value = totalAmount.ToString()
+                            }
+                        }
                     }
-                }
-                }
                 };
+
                 var jsonPayload = JsonSerializer.Serialize(payload);
 
 
@@ -87,16 +109,16 @@ namespace educat_api.Services
                 {
                     Headers =
                     {
-                        { "Authorization", $"Bearer {accessToken}" }
+                        { "Authorization", $"Bearer {accessToken}" },
+                        //{ "PayPal-Mock-Response", "{\"mock_application_codes\": \"INTERNAL_SERVER_ERROR\"}"}
                     },
                     Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
                 };
 
                 using var response = await _httpClient.SendAsync(request);
-
-                response.EnsureSuccessStatusCode();
-
                 var responseContent = await response.Content.ReadAsStringAsync();
+
+
                 var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(responseContent);
 
                 if (data is null)
@@ -104,6 +126,10 @@ namespace educat_api.Services
                     throw new Exception("Data no obtenida");
                 }
 
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new PayPalException("Error al crear la orden en PayPal", data);
+                }
 
                 return data;
             } catch (Exception)
@@ -112,6 +138,102 @@ namespace educat_api.Services
             }
 
         }
+
+        public async Task<CaptureOrderInDTO> CaptureOrder(string orderId)
+        {
+            try
+            {
+                var accessToken = await GenerateAccessTokenAsync();
+                var url = $"{_payPalSettings.BaseUri}/v2/checkout/orders/{orderId}/capture";
+
+                var request = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Headers =
+                    {
+                        { "Authorization", $"Bearer {accessToken}" },
+                        //{ "PayPal-Mock-Response", "{\"mock_application_codes\": \"TRANSACTION_REFUSED\"}"}
+                    },
+                    Content = new StringContent("", Encoding.UTF8, "application/json")
+                };
+
+                using var response = await _httpClient.SendAsync(request);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+
+                var data = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new PayPalException("Error al crear la orden en PayPal", data);
+                }
+
+                var orderJsonString = data.GetRawText();
+                var order = JsonSerializer.Deserialize<CaptureOrderInDTO>(orderJsonString);
+
+                return order;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task CreatePayments(int userId, CaptureOrderInDTO infoOrder)
+        {
+            using var transaction = _context.Database.BeginTransaction();
+            try
+            {
+                var cartItems = await _context.CartWishList
+                    .Include(c => c.Course)
+                    .Where(c => c.Type == "cart" && c.FkUser == userId)
+                    .ToListAsync();
+
+                var newCartItemsList = new List<Payment>();
+                Console.WriteLine(infoOrder.payer.payer_id);
+
+                foreach (var cartItem in cartItems)
+                {
+                    Payment newPayment = new()
+                    {
+                        FkCourse = cartItem.FkCourse,
+                        FkUser = cartItem.FkUser,
+                        OrderId = infoOrder.id,
+                        PayerId = infoOrder.payer.payer_id,
+                        PaymentAmount = cartItem.Course.Price ?? 0,
+                        PayerEmail = infoOrder.payer.email_address,
+                        PaymentMethod = "",
+                        CardType = "",
+                        PaymentStatus = infoOrder.status,
+                        Currency = infoOrder.purchase_units[0].payments.captures[0].amount.currency_code,
+                        TransactionDate = infoOrder.purchase_units[0].payments.captures[0].update_time,
+
+                    };
+
+                    newCartItemsList.Add(newPayment);
+                }
+                
+                await _context.AddRangeAsync(newCartItemsList.AsEnumerable());
+                _context.CartWishList.RemoveRange(cartItems);
+
+                _context.SaveChanges();
+                transaction.Commit();
+            }
+            catch (Exception)
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+        public class PayPalException : Exception
+        {
+            public object ErrorData { get; }
+
+            public PayPalException(string message, object errorData) : base(message)
+            {
+                ErrorData = errorData;
+            }
+        }
+
 
     }
 }
