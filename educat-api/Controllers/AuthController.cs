@@ -161,16 +161,7 @@ namespace educat_api.Controllers
                     return BadRequest(new Response<string>(false, "No se pudo obtener la información del usuario"));
                 }
 
-                var user = new UserWithGoogleDTO
-                {
-                    Email = googleUser.Email,
-                    Name = googleUser.Name,
-                    LastName = googleUser.LastName,
-                    AvatarUrl = googleUser.AvatarUrl,
-                    ValidatedEmail = googleUser.ValidatedEmail
-                };
-
-                var userEdu = await _service.UserWithGoogle(user);
+                var userEdu = await _service.UserWithGoogle(googleUser);
                 string token = GenerateToken(userEdu, 120);
                 return Ok(new Response<object>(true, "Inicio de sesión exitoso", new { token }));
 
