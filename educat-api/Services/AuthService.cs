@@ -116,7 +116,7 @@ namespace educat_api.Services
                     Name = user.Name,
                     Email = user.Email,
                     LastName = user.LastName ?? "",
-                    AvatarUrl = user.AvatarUrl,
+                    AvatarUrl = user.Picture ?? "",
                     ValidatedEmail = user.ValidatedEmail
                 };
 

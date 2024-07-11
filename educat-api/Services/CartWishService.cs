@@ -1,5 +1,6 @@
 ﻿using Domain.DTOs.CartWishList;
 using Domain.DTOs.Course;
+using Domain.DTOs.User;
 using Domain.Entities;
 using educat_api.Context;
 using Microsoft.EntityFrameworkCore;
@@ -33,12 +34,19 @@ namespace educat_api.Services
                             FkCategory = c.Course.FkCategory,
                             FKInstructor = c.Course.FKInstructor,
                             Active = c.Course.Active,
-                            Summary = c.Course.Summary,
+                            Summary = c.Course.Summary ?? "",
                             Title = c.Course.Title,
                             Price = c.Course.Price,
-                            Cover = c.Course.Cover,
+                            Cover = c.Course.Cover ?? "",
                             CretionDate = c.Course.CretionDate,
                             UpdateDate = c.Course.UpdateDate
+                        },
+                        Instructor = new UserMinOutDTO
+                        {
+                            PkUser = c.Course.Instructor.PkInstructor,
+                            Name = c.Course.Instructor.User.Name,
+                            LastName = c.Course.Instructor.User.LastName,
+                            AvatarUrl = c.Course.Instructor.User.AvatarUrl
                         }
                     })
                     .ToListAsync();
@@ -135,13 +143,20 @@ namespace educat_api.Services
                             FkCategory = c.Course.FkCategory,
                             FKInstructor = c.Course.FKInstructor,
                             Active = c.Course.Active,
-                            Summary = c.Course.Summary,
+                            Summary = c.Course.Summary ?? "",
                             Title = c.Course.Title,
                             Price = c.Course.Price,
-                            Cover = c.Course.Cover,
+                            Cover = c.Course.Cover ?? "",
                             CretionDate = c.Course.CretionDate,
                             UpdateDate = c.Course.UpdateDate
-                        }
+                        },
+                        Instructor = new UserMinOutDTO
+                        {
+                            PkUser = c.Course.Instructor.PkInstructor,
+                            Name = c.Course.Instructor.User.Name,
+                            LastName = c.Course.Instructor.User.LastName,
+                            AvatarUrl = c.Course.Instructor.User.AvatarUrl
+                        } 
                     })
                     .ToListAsync();
 

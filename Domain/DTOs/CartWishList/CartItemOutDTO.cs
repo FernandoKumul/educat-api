@@ -1,4 +1,5 @@
 ﻿using Domain.DTOs.Course;
+using Domain.DTOs.User;
 using Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -17,5 +18,6 @@ namespace Domain.DTOs.CartWishList
         public DateTime CreationDate { get; set; } = DateTime.Now;
 
         public CourseMinOutDTO Course { get; set; } = null!;
+        public UserMinOutDTO Instructor { get; set; } = null!;
     }
 }
