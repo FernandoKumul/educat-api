@@ -4,7 +4,6 @@ using Domain.DTOs.Google;
 using Domain.Entities;
 using Domain.Utilities;
 using educat_api.Services;
-using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +11,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
 
 namespace educat_api.Controllers
 {
@@ -22,8 +23,10 @@ namespace educat_api.Controllers
         private readonly AuthService _service;
         private readonly EmailService _emailService;
         private readonly IConfiguration _config;
+        private readonly HttpClient _httpClient;
         public AuthController(AuthService service, EmailService emailService, IConfiguration config)
         {
+            _httpClient = new HttpClient();
             _service = service;
             _emailService = emailService;
             _config = config;
@@ -141,18 +144,24 @@ namespace educat_api.Controllers
 
         // Login/register con Google
         [HttpPost("google")]
-        public async Task<IActionResult> UserWithGoogle(UserByGoogleDTO request){
+        public async Task<IActionResult> UserWithGoogle(string accessToken){
             try
             {
-                var user = new UserWithGoogleDTO
+                var request = new HttpRequestMessage(HttpMethod.Get,  $"https://www.googleapis.com/oauth2/v3/userinfo?access_token={accessToken}");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        
+                var response = await _httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+                var payload = await response.Content.ReadAsStringAsync();
+                var googleUser = JsonConvert.DeserializeObject<UserWithGoogleDTO>(payload);
+
+                if (googleUser is null)
                 {
-                    Email = request.Email,
-                    Name = request.GivenName,
-                    LastName = request.FamilyName,
-                    AvatarUrl = request.Picture,
-                    ValidatedEmail = request.EmailVerified
-                };
-                var userEdu = await _service.UserWithGoogle(user);
+                    return BadRequest(new Response<string>(false, "No se pudo obtener la información del usuario"));
+                }
+
+                var userEdu = await _service.UserWithGoogle(googleUser);
                 string token = GenerateToken(userEdu, 120);
                 return Ok(new Response<object>(true, "Inicio de sesión exitoso", new { token }));
 
