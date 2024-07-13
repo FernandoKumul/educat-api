@@ -12,10 +12,32 @@ namespace educat_api.Services
     {
         private readonly AppDBContext _context;
         private readonly CommentService _commentService;
+
         public CourseService(AppDBContext context, CommentService commentService)
         {
             _context = context;
             _commentService = commentService;
+        }
+
+        public async Task<IEnumerable<Course>> GetCoursesByUserId(int userId)
+        {
+            return await _context.Courses
+                .Where(c => c.Instructor.FkUser == userId)
+                .ToListAsync();
+        }
+
+        public async Task<int> CreateCourse(CourseTitleDTO courseTitleDTO, int userId)
+        {
+            var newCourse = new Course
+            {
+                Title = courseTitleDTO.Title,
+                FKInstructor = userId,
+                // Set other default values if needed
+            };
+
+            _context.Courses.Add(newCourse);
+            await _context.SaveChangesAsync();
+            return newCourse.PkCourse;
         }
 
         public async Task<CourseEditOutDTO?> GetToEdit(int courseId, int userId)
@@ -64,8 +86,8 @@ namespace educat_api.Services
                         }).ToList()
                     })
                     .FirstOrDefaultAsync();
-
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -103,25 +125,25 @@ namespace educat_api.Services
                 existingCourse.Tags = updatedCourse.Tags;
                 existingCourse.UpdateDate = DateTime.Now;
 
-                foreach(var updatedUnit in  updatedCourse.Units)
+                foreach (var updatedUnit in updatedCourse.Units)
                 {
                     var idLessonsUpdateAndAdd = new List<int>();
                     var existingUnit = existingCourse.Units.FirstOrDefault(q => q.PkUnit == updatedUnit.PkUnit);
 
                     if (existingUnit != null)
                     {
-                        //Actualizo unidad existente
+                        // Actualizo unidad existente
                         existingUnit.Title = updatedUnit.Title;
                         existingUnit.Order = updatedUnit.Order;
                         idUnitsUpdateAndAdd.Add(existingUnit.PkUnit);
 
-                        foreach(var updateLesson in updatedUnit.Lessons)
+                        foreach (var updateLesson in updatedUnit.Lessons)
                         {
                             var existingLesson = existingUnit.Lessons.FirstOrDefault(l => l.PkLesson == updateLesson.PkLesson);
 
-                            if(existingLesson != null)
+                            if (existingLesson != null)
                             {
-                                //Actualizar lección
+                                // Actualizar lección
                                 existingLesson.Text = updateLesson.Text;
                                 existingLesson.Title = updateLesson.Title;
                                 existingLesson.VideoUrl = updateLesson.VideoUrl;
@@ -129,10 +151,10 @@ namespace educat_api.Services
                                 existingLesson.Order = updateLesson.Order;
                                 existingLesson.TimeDuration = updateLesson.TimeDuration;
                                 idLessonsUpdateAndAdd.Add(existingLesson.PkLesson);
-
-                            } else
+                            }
+                            else
                             {
-                                //Agregar nueva lección
+                                // Agregar nueva lección
                                 Lesson newLesson = new Lesson
                                 {
                                     Fkunit = existingUnit.PkUnit,
@@ -147,11 +169,10 @@ namespace educat_api.Services
 
                                 await _context.Lessons.AddAsync(newLesson);
                                 idLessonsUpdateAndAdd.Add(newLesson.PkLesson);
-
                             }
                         }
 
-                        //Borrar lecciones de la unidad
+                        // Borrar lecciones de la unidad
                         var lessonToDelete = new List<Lesson>();
                         foreach (var lesson in existingUnit.Lessons)
                         {
@@ -162,7 +183,7 @@ namespace educat_api.Services
                     }
                     else
                     {
-                        //Agrego nueva unidad
+                        // Agrego nueva unidad
                         var newUnit = new Unit
                         {
                             FkCourse = courseId,
@@ -172,9 +193,9 @@ namespace educat_api.Services
                         await _context.Units.AddAsync(newUnit);
                         await _context.SaveChangesAsync();
                         idUnitsUpdateAndAdd.Add(newUnit.PkUnit);
-                        
-                        //Agregar todas sus lecciones
-                        foreach(var lesson in updatedUnit.Lessons)
+
+                        // Agregar todas sus lecciones
+                        foreach (var lesson in updatedUnit.Lessons)
                         {
                             Lesson newLesson = new Lesson()
                             {
@@ -191,10 +212,9 @@ namespace educat_api.Services
                             await _context.Lessons.AddAsync(newLesson);
                         }
                     }
-                    
                 }
 
-                //Borrar unidades y lecciones
+                // Borrar unidades y lecciones
                 var UnitsToDelete = new List<Unit>();
                 foreach (var unit in existingCourse.Units)
                 {
@@ -210,9 +230,7 @@ namespace educat_api.Services
             {
                 await transaction.RollbackAsync();
                 throw new Exception($"Error guardar el curso: ${ex.Message}.", ex.InnerException);
-
             }
-
         }
 
         public async Task<CoursePublicOutDTO?> GetInfoPublic(int courseId)
@@ -260,39 +278,53 @@ namespace educat_api.Services
                                 Fkunit = l.Fkunit,
                                 Order = l.Order,
                                 TimeDuration = l.TimeDuration,
-                                Type = l.Type,
-                                CretionDate = l.CretionDate
+                                Type = l.Type
                             }).ToList()
                         }).ToList()
-
                     })
                     .FirstOrDefaultAsync();
 
-                if (course is null) return null;
-
-                //Traer las calificaciones
-                course.Rating = await _commentService.GetAvgReviewsByCourse(courseId);
-
-                int students = await _context.Payments.CountAsync(c => c.FkCourse == courseId);
-                course.NumberStudents = students;
+                if (course is null) throw new Exception("Curso no encontrado");
 
                 return course;
-            } catch (Exception)
+            }
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception($"Error obteniendo curso público: ${ex.Message}.", ex.InnerException);
             }
         }
 
-        public async Task<bool> HasPurchasedCourse(int courseId, int userId)
+        public async Task DeleteCourse(int courseId, int userId)
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
-                return await _context.Payments
-                    .AnyAsync(c => c.FkCourse == courseId && c.FkUser == userId);
+                var courseToDelete = await _context.Courses
+                    .Include(c => c.Units)
+                        .ThenInclude(u => u.Lessons)
+                    .FirstOrDefaultAsync(c => c.PkCourse == courseId && c.FKInstructor == userId);
 
-            } catch (Exception)
+                if (courseToDelete is null)
+                {
+                    await transaction.RollbackAsync();
+                    throw new Exception("Curso no encontrado");
+                }
+
+                //var comments = await _commentService.GetAllCommentByCourseId(courseId);
+
+                //_context.Comments.RemoveRange(comments);
+                _context.Lessons.RemoveRange(courseToDelete.Units.SelectMany(u => u.Lessons));
+                _context.Units.RemoveRange(courseToDelete.Units);
+       
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
             {
-                throw;
+                await transaction.RollbackAsync();
+                throw new Exception($"Error eliminando curso: ${ex.Message}.", ex.InnerException);
             }
         }
     }
