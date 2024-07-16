@@ -121,5 +121,75 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
             }
         }
+
+        [Authorize]
+        [HttpPost("")]
+        public async Task<ActionResult> Create([FromBody] CourseTitleInDTO dataCourse)
+        {
+            try
+            {
+                var userId = User.FindFirst("ID")?.Value;
+                var isInstructor = User.FindFirst("IsInstructor")?.Value;
+
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+
+                }
+
+                if (!Boolean.TryParse(isInstructor, out bool isInstructorBool))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+                }
+
+                if (!isInstructorBool)
+                {
+                    return new ObjectResult(new Response<string>(false, "No eres un instructor")) { StatusCode = 403 };
+                }
+
+                var newId = await _service.CreateCourse(dataCourse, userIdInt);
+
+                return Ok(new Response<int>(true, "Curso creado de manera exitosa", newId));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
+            }
+        }
+        
+        [Authorize]
+        [HttpGet("instructor")]
+        public async Task<ActionResult> GetCoursesByUserId()
+        {
+            try
+            {
+                var userId = User.FindFirst("ID")?.Value;
+                var isInstructor = User.FindFirst("IsInstructor")?.Value;
+
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+
+                }
+
+                if (!Boolean.TryParse(isInstructor, out bool isInstructorBool))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+                }
+
+                if (!isInstructorBool)
+                {
+                    return new ObjectResult(new Response<string>(false, "No eres un instructor")) { StatusCode = 403 };
+                }
+
+                var courses = await _service.GetCoursesByUserId(userIdInt);
+
+                return Ok(new Response<IEnumerable<CourseMineOutDTO>>(true, "Cursos obtenidos de manera exitosa", courses));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
+            }
+        }
     }
 }
