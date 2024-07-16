@@ -295,5 +295,55 @@ namespace educat_api.Services
                 throw;
             }
         }
+        public async Task<int> CreateCourse(CourseTitleInDTO course, int userId)
+        {
+            try
+            {
+                var findInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.FkUser == userId) 
+                    ?? throw new Exception("Tu cuenta no pertenece a un instructor");
+
+                var newCourse = new Course
+                {
+                    FKInstructor = findInstructor.PkInstructor,
+                    Title = course.Title,
+                };
+
+                await _context.Courses.AddAsync(newCourse);
+                await _context.SaveChangesAsync();
+                return newCourse.PkCourse;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<CourseMineOutDTO>> GetCoursesByUserId(int userId)
+        {
+            try
+            {
+                var findInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.FkUser == userId)
+                    ?? throw new Exception("Tu cuenta no pertenece a un instructor");
+
+                var courses = await _context.Courses.Where(c => c.Instructor.FkUser == userId)
+                                .OrderByDescending(c => c.CretionDate)
+                                .Select(c => new CourseMineOutDTO
+                                {
+                                    PkCourse = c.PkCourse,
+                                    FKInstructor = c.FKInstructor,
+                                    FkCategory = c.FkCategory,
+                                    Title = c.Title,
+                                    Cover = c.Cover,
+                                    Price = c.Price,
+                                    Active = c.Active,
+                                    CretionDate = c.CretionDate,
+                                    UpdateDate = c.UpdateDate
+                                }).ToListAsync();
+
+                return courses;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
