@@ -372,5 +372,117 @@ namespace educat_api.Services
             }
         }
 
+
+        public async Task DeleteCourse(int courseId, int userId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var courseFind = await _context.Courses.FirstOrDefaultAsync(c => c.Instructor.FkUser == userId && c.PkCourse == courseId);
+                
+                if (courseFind == null)
+                {
+                    throw new Exception("Curso no encontrado");
+                }
+
+                var likesDelete = await _context.Likes.Where(l => l.Comment.FkCourse == courseId ||
+                    (l.Comment.Lesson != null && l.Comment.Lesson.Unit.FkCourse == courseId))
+                    .ToListAsync();
+
+                _context.Likes.RemoveRange(likesDelete);
+
+                var commentsDelete = await _context.Comments.Where(c => c.FkCourse == courseId).ToListAsync();
+
+                _context.Comments.RemoveRange(commentsDelete);
+
+                var lessonsDelete = await _context.Lessons.Where(c => c.Unit.FkCourse == courseId).ToListAsync();
+
+                _context.Lessons.RemoveRange(lessonsDelete);
+
+                var unitsDelete = await _context.Units.Where(u => u.FkCourse == courseId).ToListAsync();
+
+                _context.Units.RemoveRange(unitsDelete);
+
+                var wishListCartDelete = await _context.CartWishList.Where(w => w.FkCourse == courseId).ToListAsync();
+
+                _context.CartWishList.RemoveRange(wishListCartDelete);
+
+                await _context.Payments
+                   .Where(c => c.FkCourse == courseId)
+                   .ExecuteUpdateAsync(f => f
+                   .SetProperty(x => x.FkCourse, x => null)
+                   .SetProperty(x => x.Archived, x => true));
+
+                _context.Courses.Remove(courseFind);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task PublishCourse(int courseId, int userId)
+        {
+            try
+            {
+                var courseFind = await _context.Courses
+                    .FirstOrDefaultAsync(c => c.PkCourse == courseId && c.Instructor.FkUser == userId) 
+                    ?? throw new Exception("Curso no encontrado");
+
+                courseFind.Active = true;
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<CourseSearchDTO>> GetPopularCourses(int limit)
+        {
+            try
+            {
+                var oneMonthAgo = DateTime.Now.AddMonths(-2);
+                var coursesFound = await _context.Courses
+                    .Where(c => c.CretionDate >= oneMonthAgo && c.Active == true)
+                    .GroupJoin(
+                        _context.Comments,
+                        course => course.PkCourse,
+                        comment => comment.FkCourse,
+                        (course, comments) => new { course, comments }
+                    )
+                    .Select(x => new CourseSearchDTO
+                    {
+                        PkCourse = x.course.PkCourse,
+                        Title = x.course.Title,
+                        Difficulty = x.course.Difficulty,
+                        Cover = x.course.Cover,
+                        Price = x.course.Price,
+                        Active = x.course.Active,
+                        Tags = x.course.Tags,
+                        FKInstructor = x.course.FKInstructor,
+                        InstructorName = x.course.Instructor.User.Name,
+                        FkCategory = x.course.FkCategory,
+                        CategoryName = x.course.Category == null ? null : x.course.Category.Name,
+                        InstructorLastName = x.course.Instructor.User.LastName,
+                        Rating = x.comments.Any() ? x.comments.Average(c => c.Score) : 0,
+                        CretionDate = x.course.CretionDate,
+                    })
+                    .OrderByDescending(c => c.Rating)
+                    .ThenByDescending(c => c.CretionDate)
+                    .Take(limit)
+                    .ToListAsync();
+
+                return coursesFound;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

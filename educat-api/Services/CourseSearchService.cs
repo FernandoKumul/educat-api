@@ -59,9 +59,11 @@ namespace educat_api.Services
                         FkCategory = x.course.c.FkCategory,
                         CategoryName = x.course.CategoryName,
                         InstructorLastName = x.course.InstructorLastName,
-                        Rating = x.comments.Any() ? x.comments.Average(c => c.Score) : 0
+                        Rating = x.comments.Any() ? x.comments.Average(c => c.Score) : 0,
+                        CretionDate = x.course.c.CretionDate
                     })
                     .Skip(skip)
+                    .OrderByDescending(c => c.CretionDate)
                     .Take(pageSize)
                     .ToListAsync();
 
@@ -85,28 +87,40 @@ namespace educat_api.Services
                     _context.Users,
                     ci => ci.i.FkUser,
                     u => u.PkUser,
-                    (ci, u) => new { ci.c, ci.i, InstructorName = u.Name }
+                    (ci, u) => new { ci.c, ci.i, InstructorName = u.Name, InstructorLastName = u.LastName }
                 )
                 .Join(
                     _context.Categories,
                     ciu => ciu.c.FkCategory,
                     cat => cat.PkCategory,
-                    (ciu, cat) => new CourseSearchDTO
-                    {
-                        PkCourse = ciu.c.PkCourse,
-                        Title = ciu.c.Title,
-                        Difficulty = ciu.c.Difficulty,
-                        Price = ciu.c.Price,
-                        Active = ciu.c.Active,
-                        Tags = ciu.c.Tags,
-                        FKInstructor = ciu.c.FKInstructor,
-                        InstructorName = ciu.InstructorName,
-                        FkCategory = ciu.c.FkCategory,
-                        CategoryName = cat.Name
-                    }
+                    (ciu, cat) => new { ciu.c, ciu.InstructorName, CategoryName = cat.Name, ciu.InstructorLastName }
                 )
+                .GroupJoin(
+                    _context.Comments,
+                    course => course.c.PkCourse,
+                    comment => comment.FkCourse,
+                    (course, comments) => new { course, comments }
+                )
+                .Select(x => new CourseSearchDTO
+                {
+                    PkCourse = x.course.c.PkCourse,
+                    Title = x.course.c.Title,
+                    Difficulty = x.course.c.Difficulty,
+                    Cover = x.course.c.Cover,
+                    Price = x.course.c.Price,
+                    Active = x.course.c.Active,
+                    Tags = x.course.c.Tags,
+                    FKInstructor = x.course.c.FKInstructor,
+                    InstructorName = x.course.InstructorName,
+                    FkCategory = x.course.c.FkCategory,
+                    CategoryName = x.course.CategoryName,
+                    InstructorLastName = x.course.InstructorLastName,
+                    Rating = x.comments.Any() ? x.comments.Average(c => c.Score) : 0,
+                    CretionDate = x.course.c.CretionDate
+                })
                 .Where(c => ((c.Title != null && c.Title.Contains(query)) || (c.Tags != null && c.Tags.Contains(query))) && c.Active == true && c.CategoryName == category)
                 .Skip(skip)
+                .OrderByDescending(c => c.CretionDate)
                 .Take(pageSize)
                 .ToListAsync();
 

@@ -227,7 +227,8 @@ namespace educat_api.Context
                 new Category { PkCategory = 5, Name = "Desarrollo personal" },
                 new Category { PkCategory = 6, Name = "Música" },
                 new Category { PkCategory = 7, Name = "Marketing" },
-                new Category { PkCategory = 8, Name = "Negocios" }
+                new Category { PkCategory = 8, Name = "Negocios" },
+                new Category { PkCategory = 9, Name = "Manualidades" }
             );
         }
 

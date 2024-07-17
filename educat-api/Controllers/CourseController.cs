@@ -148,6 +148,11 @@ namespace educat_api.Controllers
                     return new ObjectResult(new Response<string>(false, "No eres un instructor")) { StatusCode = 403 };
                 }
 
+                if (String.IsNullOrEmpty(dataCourse.Title.Trim()))
+                {
+                    return BadRequest(new Response<string>(false, "El título no puede estar vacío"));
+                }
+
                 var newId = await _service.CreateCourse(dataCourse, userIdInt);
 
                 return Ok(new Response<int>(true, "Curso creado de manera exitosa", newId));
@@ -217,6 +222,96 @@ namespace educat_api.Controllers
                 }
 
                 return Ok (new Response<LessonOutDTO>(true, "Lección obtenida de manera exitosa", lesson));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
+            }
+        }
+        
+        [Authorize]
+        [HttpDelete("{courseId}")]
+        public async Task<ActionResult> DeleteCourse(int courseId)
+        {
+            try
+            {
+                var userId = User.FindFirst("ID")?.Value;
+                var isInstructor = User.FindFirst("IsInstructor")?.Value;
+
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+
+                }
+
+                if (!Boolean.TryParse(isInstructor, out bool isInstructorBool))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+                }
+
+                if (!isInstructorBool)
+                {
+                    return new ObjectResult(new Response<string>(false, "No eres un instructor")) { StatusCode = 403 };
+                }
+
+                await _service.DeleteCourse(courseId, userIdInt);
+
+                return Ok(new Response<string?>(true, "Cursos eliminado de manera exitosa", null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
+            }
+        }
+
+        [Authorize]
+        [HttpPut("publish/{courseId}")]
+        public async Task<ActionResult> PublishCourse(int courseId)
+        {
+            try
+            {
+                var userId = User.FindFirst("ID")?.Value;
+                var isInstructor = User.FindFirst("IsInstructor")?.Value;
+
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+
+                }
+
+                if (!Boolean.TryParse(isInstructor, out bool isInstructorBool))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+                }
+
+                if (!isInstructorBool)
+                {
+                    return new ObjectResult(new Response<string>(false, "No eres un instructor")) { StatusCode = 403 };
+                }
+
+                await _service.PublishCourse(courseId, userIdInt);
+
+                return Ok(new Response<string?>(true, "Cursos publicado de manera exitosa", null));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
+            }
+        }
+
+        [HttpGet("popular")]
+        public async Task<ActionResult> GetPopularCourses([FromQuery] int limit = 5)
+        {
+            try
+            {
+                if (limit <= 0)
+                {
+                    limit = 5;
+                }
+
+                var courses = await _service.GetPopularCourses(limit);
+
+                return Ok(new Response<IEnumerable<CourseSearchDTO>>(true, "Cursos obtenidos de manera exitosa", courses));
             }
             catch (Exception ex)
             {
