@@ -1,7 +1,6 @@
 ﻿using educat_api.Context;
 using Domain.Entities;
 using System.Threading.Tasks;
-using educat_api.Services;
 
 public class UserService : IUserService
 {
