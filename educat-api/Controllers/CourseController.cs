@@ -147,6 +147,11 @@ namespace educat_api.Controllers
                     return new ObjectResult(new Response<string>(false, "No eres un instructor")) { StatusCode = 403 };
                 }
 
+                if (String.IsNullOrEmpty(dataCourse.Title.Trim()))
+                {
+                    return BadRequest(new Response<string>(false, "El título no puede estar vacío"));
+                }
+
                 var newId = await _service.CreateCourse(dataCourse, userIdInt);
 
                 return Ok(new Response<int>(true, "Curso creado de manera exitosa", newId));
