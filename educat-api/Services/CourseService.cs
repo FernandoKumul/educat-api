@@ -415,5 +415,47 @@ namespace educat_api.Services
                 throw;
             }
         }
+
+        public async Task<IEnumerable<CourseSearchDTO>> GetPopularCourses(int limit)
+        {
+            try
+            {
+                var oneMonthAgo = DateTime.Now.AddMonths(-2);
+                var coursesFound = await _context.Courses
+                    .Where(c => c.CretionDate >= oneMonthAgo && c.Active == true)
+                    .GroupJoin(
+                        _context.Comments,
+                        course => course.PkCourse,
+                        comment => comment.FkCourse,
+                        (course, comments) => new { course, comments }
+                    )
+                    .Select(x => new CourseSearchDTO
+                    {
+                        PkCourse = x.course.PkCourse,
+                        Title = x.course.Title,
+                        Difficulty = x.course.Difficulty,
+                        Cover = x.course.Cover,
+                        Price = x.course.Price,
+                        Active = x.course.Active,
+                        Tags = x.course.Tags,
+                        FKInstructor = x.course.FKInstructor,
+                        InstructorName = x.course.Instructor.User.Name,
+                        FkCategory = x.course.FkCategory,
+                        CategoryName = x.course.Category == null ? null : x.course.Category.Name,
+                        InstructorLastName = x.course.Instructor.User.LastName,
+                        Rating = x.comments.Any() ? x.comments.Average(c => c.Score) : 0,
+                        CretionDate = x.course.CretionDate,
+                    })
+                    .OrderByDescending(c => c.Rating)
+                    .ThenByDescending(c => c.CretionDate)
+                    .Take(limit)
+                    .ToListAsync();
+
+                return coursesFound;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

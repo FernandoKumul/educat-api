@@ -16,5 +16,7 @@ namespace Domain.DTOs.Course
         public string? InstructorLastName { get; set; }
         public int? FkCategory { get; set; }
         public string? CategoryName { get; set; }
+        public DateTime CretionDate { get; set; } = DateTime.Now;
+
     }
 }
