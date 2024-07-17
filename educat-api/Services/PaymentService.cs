@@ -189,7 +189,8 @@ namespace educat_api.Services
                     .ToListAsync();
 
                 var newCartItemsList = new List<Payment>();
-                Console.WriteLine(infoOrder.payer.payer_id);
+
+                var coursesId = new List<int>();
 
                 foreach (var cartItem in cartItems)
                 {
@@ -210,10 +211,16 @@ namespace educat_api.Services
                     };
 
                     newCartItemsList.Add(newPayment);
+                    coursesId.Add(cartItem.FkCourse);
                 }
                 
                 await _context.AddRangeAsync(newCartItemsList.AsEnumerable());
                 _context.CartWishList.RemoveRange(cartItems);
+
+                //Eliminar los cursos comprados de la lista de deseos
+                await _context.CartWishList
+                    .Where(c => c.FkUser == userId && coursesId.Contains(c.FkCourse) && c.Type == "wish")
+                    .ExecuteDeleteAsync();
 
                 _context.SaveChanges();
                 transaction.Commit();
