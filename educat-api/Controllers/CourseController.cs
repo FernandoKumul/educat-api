@@ -266,5 +266,25 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
             }
         }
+
+        [HttpGet("popular")]
+        public async Task<ActionResult> GetPopularCourses([FromQuery] int limit = 5)
+        {
+            try
+            {
+                if (limit <= 0)
+                {
+                    limit = 5;
+                }
+
+                var courses = await _service.GetPopularCourses(limit);
+
+                return Ok(new Response<IEnumerable<CourseSearchDTO>>(true, "Cursos obtenidos de manera exitosa", courses));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
+            }
+        }
     }
 }
