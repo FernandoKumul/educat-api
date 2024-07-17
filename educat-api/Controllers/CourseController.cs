@@ -1,5 +1,6 @@
 ﻿using Domain.DTOs.Auth;
 using Domain.DTOs.Course;
+using Domain.DTOs.Lesson;
 using Domain.Utilities;
 using educat_api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -190,6 +191,37 @@ namespace educat_api.Controllers
                 var courses = await _service.GetCoursesByUserId(userIdInt);
 
                 return Ok(new Response<IEnumerable<CourseMineOutDTO>>(true, "Cursos obtenidos de manera exitosa", courses));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
+            }
+        }
+        
+        [Authorize]
+        [HttpGet("lesson/{id}")]
+
+        public async Task<ActionResult> GetLesson(int id)
+        {
+            try
+            {
+                var userId = User.FindFirst("ID")?.Value;
+                var isInstructor = User.FindFirst("IsInstructor")?.Value;
+
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+
+                }
+
+                var lesson = await _service.GetLesson(id);
+
+                if (lesson is null)
+                {
+                    return NotFound(new Response<string>(false, "Lección no encontrada"));
+                }
+
+                return Ok (new Response<LessonOutDTO>(true, "Lección obtenida de manera exitosa", lesson));
             }
             catch (Exception ex)
             {

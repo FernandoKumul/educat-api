@@ -346,6 +346,33 @@ namespace educat_api.Services
             }
         }
 
+        public async Task<LessonOutDTO?> GetLesson(int lessonId)
+        {
+            try
+            {
+                return await _context.Lessons
+                    .Where(l => l.PkLesson == lessonId)
+                    .Select(l => new LessonOutDTO
+                    {
+                        PkLesson = l.PkLesson,
+                        Title = l.Title,
+                        Fkunit = l.Fkunit,
+                        Text = l.Text,
+                        Order = l.Order,
+                        TimeDuration = l.TimeDuration,
+                        Type = l.Type,
+                        VideoUrl = l.VideoUrl,
+                        CretionDate = l.CretionDate
+                    })
+                    .FirstOrDefaultAsync();
+
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
+
+
         public async Task DeleteCourse(int courseId, int userId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
