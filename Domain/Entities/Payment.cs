@@ -13,7 +13,7 @@ namespace Domain.Entities
         [Key]
         public int PkPayment { get; set; }
         [ForeignKey("Course")]
-        public int FkCourse { get; set; }
+        public int? FkCourse { get; set; }
 
         [ForeignKey("User")]
         public int FkUser { get; set; }
@@ -30,7 +30,7 @@ namespace Domain.Entities
         public DateTime CreationDate { get; set; } = DateTime.Now;
 
 
-        public virtual Course Course { get; set; } = null!;
+        public virtual Course? Course { get; set; } = null!;
         public virtual User User { get; set; } = null!;
         public ICollection<LessonProgress> LessonsProgress { get; set; } = new List<LessonProgress>();
 
