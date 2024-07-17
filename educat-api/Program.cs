@@ -1,5 +1,6 @@
 using Domain.Utilities;
 using educat_api.Context;
+using educat_api.Repositories;
 using educat_api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -23,8 +24,7 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 
 builder.Services.Configure<PayPalSettings>(builder.Configuration.GetSection("PayPal"));
 
-
-//Services
+// Services
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<CourseSearchService>();
@@ -36,8 +36,11 @@ builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<CartWishService>();
 builder.Services.AddScoped<PaymentService>();
 
+// Register UserService and UserRepository
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-//JWT authorized
+// JWT authorized
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
     options => {
         options.TokenValidationParameters = new TokenValidationParameters
