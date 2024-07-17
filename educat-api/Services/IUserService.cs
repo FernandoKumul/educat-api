@@ -1,10 +1,6 @@
-﻿// IUserService.cs
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace educat_api.Services
+public interface IUserService
 {
-    public interface IUserService
-    {
-        Task<bool> ConvertToInstructor(int userId);
-    }
+    Task<string> ConvertToInstructor(int userIdInt);
 }

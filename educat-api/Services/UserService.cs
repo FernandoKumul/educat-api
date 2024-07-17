@@ -1,37 +1,46 @@
-﻿// UserService.cs
+﻿using educat_api.Context;
 using Domain.Entities;
-using educat_api.Services;
 using System.Threading.Tasks;
+using educat_api.Services;
 
-namespace educat_api.Services
+public class UserService : IUserService
 {
-    public class UserService : IUserService
+    private readonly AppDBContext _context;
+
+    public UserService(AppDBContext context)
     {
-        private readonly IUserRepository _userRepository;
+        _context = context;
+    }
 
-        public UserService(IUserRepository userRepository)
+    public async Task<string> ConvertToInstructor(int userIdInt)
+    {
+        var user = await _context.Users.FindAsync(userIdInt);
+        if (user == null)
         {
-            _userRepository = userRepository;
+            return "User not found";
         }
 
-        public async Task<bool> ConvertToInstructor(int userId)
+        if (user.IsInstructor)
         {
-            var user = await _userRepository.GetUserByIdAsync(userId);
-            if (user == null)
-            {
-                return false;
-            }
-
-            user.IsInstructor = true;
-            user.Instructor = new Instructor
-            {
-                FkUser = user.PkUser,
-                CreationDate = DateTime.Now,
-                // Los demás campos se inicializan como null o valores predeterminados
-            };
-
-            await _userRepository.UpdateUserAsync(user);
-            return true;
+            return "User is already an instructor";
         }
+
+        user.IsInstructor = true;
+        var instructor = new Instructor
+        {
+            FkUser = userIdInt,
+            User = user,
+            Occupation = string.Empty,
+            FacebookUser = string.Empty,
+            YoutubeUser = string.Empty,
+            LinkediId = string.Empty,
+            TwitterUser = string.Empty,
+            EmailPaypal = string.Empty,
+            CreationDate = DateTime.Now
+        };
+        _context.Instructors.Add(instructor);
+        await _context.SaveChangesAsync();
+
+        return "User converted to instructor successfully";
     }
 }

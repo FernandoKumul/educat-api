@@ -1,8 +1,8 @@
-﻿// UserController.cs
+﻿using educat_api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Domain.Entities;
-using Domain.DTOs;
-using educat_api.Services;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -15,18 +15,22 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-
-
-    [HttpPost("{userId}/convert-to-instructor")]
-    public async Task<IActionResult> ConvertToInstructor(int userId)
+    [HttpPost("convert-to-instructor")]
+    [Authorize]
+    public async Task<IActionResult> ConvertToInstructor()
     {
-        var result = await _userService.ConvertToInstructor(userId);
+        var userIdInt = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-        if (result)
+        var result = await _userService.ConvertToInstructor(userIdInt);
+        if (result == "User not found")
         {
-            return Ok(new { message = "User successfully converted to instructor." });
+            return NotFound(result);
         }
-        return BadRequest(new { message = "Failed to convert user to instructor." });
+        if (result == "User is already an instructor")
+        {
+            return BadRequest(result);
+        }
 
+        return Ok(result);
     }
 }
