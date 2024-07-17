@@ -484,5 +484,44 @@ namespace educat_api.Services
                 throw;
             }
         }
+
+        public async Task<IEnumerable<CourseSearchDTO>> GetPurchasedCourses(int userId)
+        {
+            try
+            {
+                var coursesFound = await _context.Payments
+                    .Where(p => p.FkUser == userId)
+                    .Join(
+                        _context.Courses,
+                        payment => payment.FkCourse,
+                        course => course.PkCourse,
+                        (payment, course) => new { payment, course }
+                    )
+                    .Select(x => new CourseSearchDTO
+                    {
+                        PkCourse = x.course.PkCourse,
+                        Title = x.course.Title,
+                        Difficulty = x.course.Difficulty,
+                        Cover = x.course.Cover,
+                        Price = x.course.Price,
+                        Active = x.course.Active,
+                        Tags = x.course.Tags,
+                        FKInstructor = x.course.FKInstructor,
+                        InstructorName = x.course.Instructor.User.Name,
+                        FkCategory = x.course.FkCategory,
+                        CategoryName = x.course.Category == null ? null : x.course.Category.Name,
+                        InstructorLastName = x.course.Instructor.User.LastName,
+                        Rating = x.course.Comments.Any() ? x.course.Comments.Average(c => c.Score) : 0,
+                        CretionDate = x.course.CretionDate,
+                    })
+                    .OrderByDescending(c => c.CretionDate)
+                    .ToListAsync();
+
+                return coursesFound;
+            } catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

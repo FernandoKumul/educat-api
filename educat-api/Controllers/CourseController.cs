@@ -318,5 +318,29 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
             }
         }
+
+        [Authorize]
+        [HttpGet("purchased")]
+        public async Task<ActionResult> GetPurchasedCourses()
+        {
+            try
+            {
+                var userId = User.FindFirst("ID")?.Value;
+
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    return new ObjectResult(new Response<string>(false, "Token no válido")) { StatusCode = 403 };
+
+                }
+
+                var courses = await _service.GetPurchasedCourses(userIdInt);
+
+                return Ok(new Response<IEnumerable<CourseSearchDTO>>(true, "Cursos obtenidos de manera exitosa", courses));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? "")); //Cambiar por un 500 luego :D
+            }
+        }
     }
 }
