@@ -1,4 +1,5 @@
 using Domain.DTOs.CartWishList;
+using Domain.DTOs.Course;
 using Domain.Utilities;
 using educat_api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +32,7 @@ namespace educat_api.Controllers
 
                 var wishlistItems = await _service.GetWishListByUserId(userIdInt);
 
-                return Ok(new Response<IEnumerable<CartItemOutDTO>>(true, "Lista de deseos del usuario obtenida exitosamente", wishlistItems));
+                return Ok(new Response<IEnumerable<CourseSearchDTO>>(true, "Lista de deseos del usuario obtenida exitosamente", wishlistItems));
             }
             catch (Exception ex)
             {

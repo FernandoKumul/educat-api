@@ -125,38 +125,34 @@ namespace educat_api.Services
             }
         }
 
-        public async Task<IEnumerable<CartItemOutDTO>> GetWishListByUserId(int userId)
+        public async Task<IEnumerable<CourseSearchDTO>> GetWishListByUserId(int userId)
         {
             try
             {
                 var wishItems = await _context.CartWishList
                     .Where(c => c.Type == "wish" && c.FkUser == userId)
-                    .Select(c => new CartItemOutDTO
+                    .GroupJoin(
+                        _context.Comments,
+                        course => course.FkCourse,
+                        comment => comment.FkCourse,
+                        (course, comments) => new { course, comments }
+                    )
+                    .Select(x => new CourseSearchDTO
                     {
-                        PkCartWishList = c.PkCartWishList,
-                        FkUser = c.FkUser,
-                        FkCourse = c.FkCourse,
-                        Type = c.Type,
-                        Course = new CourseMinOutDTO
-                        {
-                            PkCourse = c.Course.PkCourse,
-                            FkCategory = c.Course.FkCategory,
-                            FKInstructor = c.Course.FKInstructor,
-                            Active = c.Course.Active,
-                            Summary = c.Course.Summary ?? "",
-                            Title = c.Course.Title,
-                            Price = c.Course.Price,
-                            Cover = c.Course.Cover ?? "",
-                            CretionDate = c.Course.CretionDate,
-                            UpdateDate = c.Course.UpdateDate
-                        },
-                        Instructor = new UserMinOutDTO
-                        {
-                            PkUser = c.Course.Instructor.PkInstructor,
-                            Name = c.Course.Instructor.User.Name,
-                            LastName = c.Course.Instructor.User.LastName,
-                            AvatarUrl = c.Course.Instructor.User.AvatarUrl
-                        } 
+                        PkCourse = x.course.Course.PkCourse,
+                        Title = x.course.Course.Title,
+                        Difficulty = x.course.Course.Difficulty,
+                        Cover = x.course.Course.Cover,
+                        Price = x.course.Course.Price,
+                        Active = x.course.Course.Active,
+                        Tags = x.course.Course.Tags,
+                        FKInstructor = x.course.Course.FKInstructor,
+                        InstructorName = x.course.Course.Instructor.User.Name,
+                        FkCategory = x.course.Course.FkCategory,
+                        CategoryName = x.course.Course.Category == null ? null : x.course.Course.Category.Name,
+                        InstructorLastName = x.course.Course.Instructor.User.LastName,
+                        Rating = x.comments.Any() ? x.comments.Average(c => c.Score) : 0,
+                        CretionDate = x.course.Course.CretionDate,
                     })
                     .ToListAsync();
 

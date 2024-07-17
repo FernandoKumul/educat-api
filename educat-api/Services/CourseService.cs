@@ -497,24 +497,30 @@ namespace educat_api.Services
                         course => course.PkCourse,
                         (payment, course) => new { payment, course }
                     )
+                    .OrderByDescending(x => x.payment.TransactionDate)
+                    .GroupJoin(
+                        _context.Comments,
+                        course => course.course.PkCourse,
+                        comment => comment.FkCourse,
+                        (course, comments) => new { course, comments }
+                    )
                     .Select(x => new CourseSearchDTO
                     {
-                        PkCourse = x.course.PkCourse,
-                        Title = x.course.Title,
-                        Difficulty = x.course.Difficulty,
-                        Cover = x.course.Cover,
-                        Price = x.course.Price,
-                        Active = x.course.Active,
-                        Tags = x.course.Tags,
-                        FKInstructor = x.course.FKInstructor,
-                        InstructorName = x.course.Instructor.User.Name,
-                        FkCategory = x.course.FkCategory,
-                        CategoryName = x.course.Category == null ? null : x.course.Category.Name,
-                        InstructorLastName = x.course.Instructor.User.LastName,
-                        Rating = x.course.Comments.Any() ? x.course.Comments.Average(c => c.Score) : 0,
-                        CretionDate = x.course.CretionDate,
+                        PkCourse = x.course.course.PkCourse,
+                        Title = x.course.course.Title,
+                        Difficulty = x.course.course.Difficulty,
+                        Cover = x.course.course.Cover,
+                        Price = x.course.course.Price,
+                        Active = x.course.course.Active,
+                        Tags = x.course.course.Tags,
+                        FKInstructor = x.course.course.FKInstructor,
+                        InstructorName = x.course.course.Instructor.User.Name,
+                        FkCategory = x.course.course.FkCategory,
+                        CategoryName = x.course.course.Category == null ? null : x.course.course.Category.Name,
+                        InstructorLastName = x.course.course.Instructor.User.LastName,
+                        Rating = x.comments.Any() ? x.comments.Average(c => c.Score) : 0,
+                        CretionDate = x.course.course.CretionDate,
                     })
-                    .OrderByDescending(c => c.CretionDate)
                     .ToListAsync();
 
                 return coursesFound;
