@@ -35,6 +35,7 @@ builder.Services.AddScoped<LikeService>();
 builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<CartWishService>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<UserService>();
 
 
 //JWT authorized
