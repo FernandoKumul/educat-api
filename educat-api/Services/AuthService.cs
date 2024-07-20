@@ -135,7 +135,24 @@ namespace educat_api.Services
                 throw new Exception($"Error al registrar usuario: {e.Message}", e.InnerException);
             }
         }
-
+        public async Task<User?> RecoveryPassword(string email, string newPassword)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                if (user == null)
+                {
+                    throw new Exception("El correo no está registrado en la base de datos.");
+                }
+                user.Password = EncryptString(newPassword);
+                await _context.SaveChangesAsync();
+                return user;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al recuperar contraseña: {e.Message}", e.InnerException);
+            }
+        }
         public static string EncryptString(string str)
         {
             using (SHA256 sha256Hash = SHA256.Create())
