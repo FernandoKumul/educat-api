@@ -386,33 +386,23 @@ namespace educat_api.Services
                     throw new Exception("Curso no encontrado");
                 }
 
-                var likesDelete = await _context.Likes.Where(l => l.Comment.FkCourse == courseId ||
-                    (l.Comment.Lesson != null && l.Comment.Lesson.Unit.FkCourse == courseId))
-                    .ToListAsync();
-
-                _context.Likes.RemoveRange(likesDelete);
+                //==Borrado automatico==
+                //Unidades
+                //Lecciones
+                //Favoritos /carrito 
+                //Falta comprobar si borra los comentarios de las lecciones
 
                 var commentsDelete = await _context.Comments.Where(c => c.FkCourse == courseId).ToListAsync();
 
                 _context.Comments.RemoveRange(commentsDelete);
-
-                var lessonsDelete = await _context.Lessons.Where(c => c.Unit.FkCourse == courseId).ToListAsync();
-
-                _context.Lessons.RemoveRange(lessonsDelete);
-
-                var unitsDelete = await _context.Units.Where(u => u.FkCourse == courseId).ToListAsync();
-
-                _context.Units.RemoveRange(unitsDelete);
-
-                var wishListCartDelete = await _context.CartWishList.Where(w => w.FkCourse == courseId).ToListAsync();
-
-                _context.CartWishList.RemoveRange(wishListCartDelete);
 
                 await _context.Payments
                    .Where(c => c.FkCourse == courseId)
                    .ExecuteUpdateAsync(f => f
                    .SetProperty(x => x.FkCourse, x => null)
                    .SetProperty(x => x.Archived, x => true));
+
+                await _context.SaveChangesAsync();
 
                 _context.Courses.Remove(courseFind);
 
