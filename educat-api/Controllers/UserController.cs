@@ -1,4 +1,6 @@
-﻿using Domain.Utilities;
+﻿using Domain.DTOs.Instructor;
+using Domain.DTOs.User;
+using Domain.Utilities;
 using educat_api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,6 +46,32 @@ namespace educat_api.Controllers
     
                 return Ok(new Response<string>(true, result));
             } catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
+            }
+        }
+
+        [HttpPut("edit")]
+        [Authorize]
+        public async Task<ActionResult> EditUser(int userIdint, UserEditInDTO updateData)
+        {
+            var id = User.FindFirst("ID")?.Value;
+            if (id == null)
+            {
+                return BadRequest(new Response<string>(false, "No se encontró el ID del usuario", ""));
+            }
+            if (!Int32.TryParse(id, out int idUserOut))
+            {
+                return new ObjectResult(new Response<string>(false, "Token no válido"));
+
+            }
+
+            try
+            {
+                var user = await _service.EditUser(idUserOut, updateData);
+                return Ok(new Response<UserEditInDTO>(true, "Usuario actualizado", updateData));
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
             }
