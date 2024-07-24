@@ -39,7 +39,7 @@ namespace educat_api.Controllers
             {
                 User newUser = await _service.Register(user);
                 var token = GenerateToken(newUser, 1440);
-                await _emailService.SendVerificationEmail(newUser.Email, token, newUser.Name + ' ' + newUser.LastName);
+                await _emailService.SendEmail(newUser.Email, token, newUser.Name + ' ' + newUser.LastName, 6025295);
 
                 return Ok(new Response<User>(true, "Usuario creado", newUser));
             }
@@ -93,6 +93,28 @@ namespace educat_api.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new Response<string>(false, "Token Inválido:: " + ex.Message));
+            }
+        }
+
+        [HttpGet("send-mail-recovery")]
+        public async Task<IActionResult> SendEmailRecovery(string email)
+        {
+            try
+            {
+                var user = await _service.GetUserByEmail(email);
+                if (user == null)
+                {
+                    return BadRequest(new Response<string>(false, "El correo no está registrado"));
+                }
+
+                var token = GenerateToken(user, 60);
+                await _emailService.SendEmail(user.Email, token, user.Name + ' ' + user.LastName, 6158032);
+                return Ok(new Response<string>(true, "Correo enviado"));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
             }
         }
 

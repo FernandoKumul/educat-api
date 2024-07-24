@@ -85,7 +85,6 @@ namespace educat_api.Services
             }
 
         }
-
         public async Task<UserAuthOutDTO?> GetAuthUserById(int id)
         {
             try
@@ -104,6 +103,17 @@ namespace educat_api.Services
             catch (Exception e)
             {
                 throw new Exception($"Error al obtener el registro: {e.Message}");
+            }
+        }
+        public async Task<User?> GetUserByEmail(string email)
+        {
+            try
+            {
+                return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error al encontrar el usuario: {e.Message}", e.InnerException);
             }
         }
         // Login/register con Google
