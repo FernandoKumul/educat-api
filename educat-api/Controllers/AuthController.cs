@@ -117,20 +117,38 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
             }
         }
-        [HttpGet("change-password")]
-        [Authorize]
-        public async Task<IActionResult> ChangePassword(string email, string password)
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword(string token, string password)
         {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_config.GetSection("JWT:Key").Value ?? "");
             try
             {
-                var user = await _service.GetUserByEmail(email);
-                if (user == null)
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {
-                    return BadRequest(new Response<string>(false, "El correo no está registrado"));
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var userId = jwtToken.Claims.First(x => x.Type == "ID").Value;
+
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    return BadRequest("Token no valido");
                 }
-                await _service.ChangePassword(email, password);
-                
-                return Ok(new Response<string>(true, "Contraseña actualizada"));
+
+                var isChanged = await _service.ChangePassword(userIdInt, password);
+
+                if (!isChanged)
+                {
+                    return BadRequest(new Response<string>(false, "No se pudo cambiar la contraseña"));
+                }
+
+                return Ok(new Response<string>(true, "Contraseña cambiada"));
             }
             catch (Exception ex)
             {
