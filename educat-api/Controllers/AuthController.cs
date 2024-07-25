@@ -117,8 +117,8 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
             }
         }
-        [HttpPut("change-password")]
-        public async Task<IActionResult> ChangePassword(string token, string password)
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword(string token, string newPassword)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_config.GetSection("JWT:Key").Value ?? "");
@@ -135,13 +135,13 @@ namespace educat_api.Controllers
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var userId = jwtToken.Claims.First(x => x.Type == "ID").Value;
-
+                
                 if (!Int32.TryParse(userId, out int userIdInt))
                 {
                     return BadRequest("Token no valido");
                 }
 
-                var isChanged = await _service.ChangePassword(userIdInt, password);
+                var isChanged = await _service.ChangePassword(userIdInt, newPassword);
 
                 if (!isChanged)
                 {
@@ -149,6 +149,7 @@ namespace educat_api.Controllers
                 }
 
                 return Ok(new Response<string>(true, "Contraseña cambiada"));
+
             }
             catch (Exception ex)
             {
