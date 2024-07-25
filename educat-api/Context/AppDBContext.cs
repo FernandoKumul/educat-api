@@ -41,6 +41,9 @@ namespace educat_api.Context
                     .IsRequired()
                     .IsUnicode(false)
                     .HasMaxLength(50);
+                entity.Property(e => e.Password)
+                    .IsUnicode(false)
+                    .HasMaxLength(100);
                 entity.Property(e => e.Email)
                     .IsRequired()
                     .IsUnicode(false)
@@ -49,7 +52,6 @@ namespace educat_api.Context
                     .IsUnicode(false)
                     .HasMaxLength(200);
                 entity.Property(e => e.Description)
-                    .IsRequired()
                     .IsUnicode(false);
                 entity.Property(e => e.IsInstructor)
                     .IsRequired()
@@ -225,7 +227,8 @@ namespace educat_api.Context
                 new Category { PkCategory = 5, Name = "Desarrollo personal" },
                 new Category { PkCategory = 6, Name = "Música" },
                 new Category { PkCategory = 7, Name = "Marketing" },
-                new Category { PkCategory = 8, Name = "Negocios" }
+                new Category { PkCategory = 8, Name = "Negocios" },
+                new Category { PkCategory = 9, Name = "Manualidades" }
             );
         }
 

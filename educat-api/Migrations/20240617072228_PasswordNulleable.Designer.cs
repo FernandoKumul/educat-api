@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using educat_api.Context;
 
@@ -11,9 +12,11 @@ using educat_api.Context;
 namespace educat_api.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240617072228_PasswordNulleable")]
+    partial class PasswordNulleable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,11 +115,6 @@ namespace educat_api.Migrations
                         {
                             PkCategory = 8,
                             Name = "Negocios"
-                        },
-                        new
-                        {
-                            PkCategory = 9,
-                            Name = "Manualidades"
                         });
                 });
 
@@ -140,7 +138,7 @@ namespace educat_api.Migrations
                     b.Property<int>("FkUser")
                         .HasColumnType("int");
 
-                    b.Property<decimal?>("Score")
+                    b.Property<decimal>("Score")
                         .HasPrecision(3, 2)
                         .HasColumnType("decimal(3,2)");
 
@@ -427,7 +425,7 @@ namespace educat_api.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)");
 
-                    b.Property<int?>("FkCourse")
+                    b.Property<int>("FkCourse")
                         .HasColumnType("int");
 
                     b.Property<int>("FkUser")
@@ -686,7 +684,9 @@ namespace educat_api.Migrations
                 {
                     b.HasOne("Domain.Entities.Course", "Course")
                         .WithMany("Payments")
-                        .HasForeignKey("FkCourse");
+                        .HasForeignKey("FkCourse")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Domain.Entities.User", "User")
                         .WithMany("Payments")

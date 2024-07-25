@@ -14,9 +14,11 @@ namespace Domain.Entities
         public string Name { get; set; } = null!;
         public string LastName { get; set; } = null!;
         public string Email { get; set; } = null!;
+        public string? Password { get; set; }
         public string? AvatarUrl { get; set; }
-        public string Description { get; set; } = null!;
+        public string? Description { get; set; }
         public bool IsInstructor { get; set; }
+        public bool ValidatedEmail { get; set; } = false;
         public DateTime CreationDate { get; set; }
 
 

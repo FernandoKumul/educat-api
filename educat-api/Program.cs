@@ -1,6 +1,10 @@
+using Domain.Utilities;
 using educat_api.Context;
 using educat_api.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,12 +14,43 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
+
+Console.WriteLine(builder.Configuration.GetConnectionString("DefaultConnection"));
 
 builder.Services.AddDbContext<AppDBContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.Configure<PayPalSettings>(builder.Configuration.GetSection("PayPal"));
+
+
 //Services
 builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<CourseSearchService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<CourseService>();
+builder.Services.AddScoped<CommentService>();
+builder.Services.AddScoped<LikeService>();
+builder.Services.AddScoped<InstructorService>();
+builder.Services.AddScoped<CartWishService>();
+builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<LessonProgressService>();
+
+
+//JWT authorized
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
+    options => {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetSection("JWT:key").Value ?? "")),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+        };
+    }
+);
 
 var app = builder.Build();
 
@@ -27,6 +62,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseCors(x => x.WithOrigins("*").AllowAnyMethod().AllowAnyHeader());
 
