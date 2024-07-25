@@ -13,6 +13,7 @@ namespace Domain.DTOs.Lesson
         public string Title { get; set; } = null!;
         public string Type { get; set; } = null!;
         public int TimeDuration { get; set; }
+        public bool Completed { get; set; } = false;
         public int Order { get; set; }
         public DateTime CretionDate { get; set; } = DateTime.Now;
     }
