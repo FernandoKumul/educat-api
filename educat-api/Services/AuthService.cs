@@ -145,7 +145,7 @@ namespace educat_api.Services
                 throw new Exception($"Error al registrar usuario: {e.Message}", e.InnerException);
             }
         }
-        public async Task<User?> RecoveryPassword(string email, string newPassword)
+        public async Task<User?> ChangePassword(string email, string newPassword)
         {
             try
             {

@@ -96,7 +96,7 @@ namespace educat_api.Controllers
             }
         }
 
-        [HttpGet("send-mail-recovery")]
+        [HttpGet("send-email-recovery")]
         public async Task<IActionResult> SendEmailRecovery(string email)
         {
             try
@@ -117,6 +117,27 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
             }
         }
+        [HttpGet("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(string email, string password)
+        {
+            try
+            {
+                var user = await _service.GetUserByEmail(email);
+                if (user == null)
+                {
+                    return BadRequest(new Response<string>(false, "El correo no está registrado"));
+                }
+                await _service.ChangePassword(email, password);
+                
+                return Ok(new Response<string>(true, "Contraseña actualizada"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, "Token Inválido:: " + ex.Message));
+            }
+        }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO login)
