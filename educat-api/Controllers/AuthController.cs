@@ -117,7 +117,7 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
             }
         }
-        [HttpPost("change-password")]
+        [HttpPut("change-password")]
         public async Task<IActionResult> ChangePassword(string token, string newPassword)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
