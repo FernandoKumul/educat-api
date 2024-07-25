@@ -227,11 +227,14 @@ namespace educat_api.Services
 
         }
 
-        public async Task<CoursePublicOutDTO?> GetInfoPublic(int courseId)
+        public async Task<CoursePublicOutDTO?> GetInfoPublic(int courseId, int userId = 0)
         {
             try
             {
-                var course = await _context.Courses
+                CoursePublicOutDTO? course = null;
+                if (userId == 0)
+                {
+                    course = await _context.Courses
                     .Where(c => c.PkCourse == courseId && c.Active == true)
                     .Select(c => new CoursePublicOutDTO
                     {
@@ -276,9 +279,64 @@ namespace educat_api.Services
                                 CretionDate = l.CretionDate
                             }).ToList()
                         }).ToList()
-
                     })
                     .FirstOrDefaultAsync();
+                } else
+                {
+                    var payment = await _context.Payments.FirstOrDefaultAsync(p => p.FkUser == userId && p.FkCourse == courseId);
+
+                    int paymentId = payment is null ? 0 : payment.PkPayment;
+
+                     course = await _context.Courses
+                    .Where(c => c.PkCourse == courseId && c.Active == true)
+                    .Select(c => new CoursePublicOutDTO
+                    {
+                        PkCourse = c.PkCourse,
+                        FKInstructor = c.FKInstructor,
+                        FkCategory = c.FkCategory,
+                        Title = c.Title,
+                        Summary = c.Summary,
+                        Language = c.Language,
+                        Difficulty = c.Difficulty,
+                        Price = c.Price,
+                        VideoPresentation = c.VideoPresentation,
+                        Cover = c.Cover,
+                        Requeriments = c.Requeriments,
+                        Description = c.Description,
+                        LearnText = c.LearnText,
+                        Tags = c.Tags,
+                        Active = c.Active,
+                        CretionDate = c.CretionDate,
+                        UpdateDate = c.UpdateDate,
+                        Instructor = new UserMinOutDTO
+                        {
+                            PkUser = c.Instructor.FkUser,
+                            AvatarUrl = c.Instructor.User.AvatarUrl,
+                            LastName = c.Instructor.User.LastName,
+                            Name = c.Instructor.User.Name
+                        },
+                        Units = c.Units.OrderBy(u => u.Order).Select(u => new UnitProgramOutDTO
+                        {
+                            PkUnit = u.PkUnit,
+                            FkCourse = u.FkCourse,
+                            Title = u.Title,
+                            Order = u.Order,
+                            Lessons = u.Lessons.OrderBy(u => u.Order).Select(l => new LessonProgramOutDTO
+                            {
+                                PkLesson = l.PkLesson,
+                                Title = l.Title,
+                                Fkunit = l.Fkunit,
+                                Order = l.Order,
+                                TimeDuration = l.TimeDuration,
+                                Completed = l.LessonsProgress.Any(p => p.FkPayment == paymentId),
+                                Type = l.Type,
+                                CretionDate = l.CretionDate
+                            }).ToList()
+                        }).ToList()
+                    })
+                    .FirstOrDefaultAsync();
+                }
+                
 
                 if (course is null) return null;
 
