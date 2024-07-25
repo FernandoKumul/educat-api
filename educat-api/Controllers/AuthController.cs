@@ -39,7 +39,9 @@ namespace educat_api.Controllers
             {
                 User newUser = await _service.Register(user);
                 var token = GenerateToken(newUser, 1440);
-                await _emailService.SendEmail(newUser.Email, token, newUser.Name + ' ' + newUser.LastName, 6025295);
+                await _emailService
+                    .SendEmail(newUser.Email, token, newUser.Name + ' ' + newUser.LastName,
+                    6025295, _config.GetSection("ApiUrl").Value ?? "");
 
                 return Ok(new Response<User>(true, "Usuario creado", newUser));
             }
@@ -86,7 +88,7 @@ namespace educat_api.Controllers
                     return BadRequest(new Response<string>(false, "Tu cuenta ya está valida"));
                 }
 
-                RedirectResult redirect = new RedirectResult("http://localhost:5173/verify-email", true);
+                RedirectResult redirect = new RedirectResult((_config.GetSection("PageUrl").Value ?? "") + "/verify-email", true);
 
                 return redirect;
             }
@@ -108,7 +110,9 @@ namespace educat_api.Controllers
                 }
 
                 var token = GenerateToken(user, 60);
-                await _emailService.SendEmail(user.Email, token, user.Name + ' ' + user.LastName, 6158032);
+                await _emailService.SendEmail(user.Email, token, user.Name + ' ' + user.LastName,
+                    6158032, _config.GetSection("PageUrl").Value ?? "");
+
                 return Ok(new Response<string>(true, "Correo enviado"));
 
             }
