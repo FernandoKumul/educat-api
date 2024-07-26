@@ -102,7 +102,7 @@ namespace educat_api.Controllers
             try
             {
                 var userId = User.FindFirst("ID")?.Value;
-                var course = await _service.GetInfoPublic(id);
+                var course = await _service.GetInfoPublic(id, userId is null ? 0 : int.Parse(userId));
                 if(course is null)
                 {
                     return NotFound(new Response<string>(false, "Curso no encontrado"));

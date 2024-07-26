@@ -23,7 +23,7 @@ namespace educat_api.Controllers
         {
             try
             {
-                await _emailService.SendVerificationEmail("kumulherrerajosefernando@gmail.com", "djfdjf", "Jose Fernando Kumul Herrera");
+                await _emailService.SendEmail("kumulherrerajosefernando@gmail.com", "djfdjf", "Jose Fernando Kumul Herrera", 6025295, "https://localhost:7245");
                 return Ok(new Response<string>(true, "Email enviado"));
             } catch (Exception ex)
             {

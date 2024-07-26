@@ -39,7 +39,9 @@ namespace educat_api.Controllers
             {
                 User newUser = await _service.Register(user);
                 var token = GenerateToken(newUser, 1440);
-                await _emailService.SendVerificationEmail(newUser.Email, token, newUser.Name + ' ' + newUser.LastName);
+                await _emailService
+                    .SendEmail(newUser.Email, token, newUser.Name + ' ' + newUser.LastName,
+                    6025295, _config.GetSection("ApiUrl").Value ?? "");
 
                 return Ok(new Response<User>(true, "Usuario creado", newUser));
             }
@@ -86,7 +88,7 @@ namespace educat_api.Controllers
                     return BadRequest(new Response<string>(false, "Tu cuenta ya está valida"));
                 }
 
-                RedirectResult redirect = new RedirectResult("http://localhost:5173/verify-email", true);
+                RedirectResult redirect = new RedirectResult((_config.GetSection("PageUrl").Value ?? "") + "/verify-email", true);
 
                 return redirect;
             }
@@ -95,6 +97,70 @@ namespace educat_api.Controllers
                 return BadRequest(new Response<string>(false, "Token Inválido:: " + ex.Message));
             }
         }
+
+        [HttpGet("send-email-recovery")]
+        public async Task<IActionResult> SendEmailRecovery(string email)
+        {
+            try
+            {
+                var user = await _service.GetUserByEmail(email);
+                if (user == null)
+                {
+                    return BadRequest(new Response<string>(false, "El correo no está registrado"));
+                }
+
+                var token = GenerateToken(user, 60);
+                await _emailService.SendEmail(user.Email, token, user.Name + ' ' + user.LastName,
+                    6158032, _config.GetSection("PageUrl").Value ?? "");
+
+                return Ok(new Response<string>(true, "Correo enviado"));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
+            }
+        }
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword(string token, string newPassword)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_config.GetSection("JWT:Key").Value ?? "");
+            try
+            {
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var userId = jwtToken.Claims.First(x => x.Type == "ID").Value;
+                
+                if (!Int32.TryParse(userId, out int userIdInt))
+                {
+                    return BadRequest("Token no valido");
+                }
+
+                var isChanged = await _service.ChangePassword(userIdInt, newPassword);
+
+                if (!isChanged)
+                {
+                    return BadRequest(new Response<string>(false, "No se pudo cambiar la contraseña"));
+                }
+
+                return Ok(new Response<string>(true, "Contraseña cambiada"));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Response<string>(false, "Token Inválido:: " + ex.Message));
+            }
+        }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO login)

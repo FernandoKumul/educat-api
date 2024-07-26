@@ -36,6 +36,7 @@ builder.Services.AddScoped<InstructorService>();
 builder.Services.AddScoped<CartWishService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<LessonProgressService>();
 
 
 //JWT authorized
