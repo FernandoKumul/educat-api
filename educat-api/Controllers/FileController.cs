@@ -42,7 +42,7 @@ namespace educat_api.Controllers
                     return BadRequest(new Response<string>(false, $"Error al subir la imagen: {uploadResult.Error.Message}"));
                 }
 
-                return Ok(new Response<object>(true, "Imagen subida exitosamente", new { url = uploadResult.Url }));
+                return Ok(new Response<object>(true, "Imagen subida exitosamente", new { url = uploadResult.SecureUrl }));
             }
         }
 
