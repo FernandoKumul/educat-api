@@ -68,7 +68,7 @@ namespace educat_api.Controllers
                     return BadRequest(new Response<string>(false, $"Error al subir el video: {uploadResult.Error.Message}"));
                 }
 
-                return Ok(new Response<object>(true, "Video subida exitosamente", new { url = uploadResult.Url, duration = uploadResult.Duration, format = uploadResult.Format }));
+                return Ok(new Response<object>(true, "Video subida exitosamente", new { url = uploadResult.SecureUrl, duration = uploadResult.Duration, format = uploadResult.Format }));
             }
         }
     }
