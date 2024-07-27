@@ -174,7 +174,7 @@ namespace educat_api.Controllers
                     return BadRequest(new Response<User>(false, "Correo o contraseña incorrectos"));
                 }
 
-                string token = GenerateToken(user, 120);
+                string token = GenerateToken(user, 180);
                 return Ok(new Response<object>(true, "Inicio de sesión exitoso", new { token }));
             }
             catch (Exception ex)

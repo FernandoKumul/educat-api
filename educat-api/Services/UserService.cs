@@ -12,26 +12,25 @@ namespace educat_api.Services
             _context = context;
         }
 
-        public async Task<string> ConvertToInstructor(int userIdInt)
+        public async Task<(string, Instructor?)> ConvertToInstructor(int userIdInt)
         {
             try
             {
                 var user = await _context.Users.FindAsync(userIdInt);
                 if (user == null)
                 {
-                    return "Usuario no encontrado";
+                    return ("Usuario no encontrado", null);
                 }
 
                 if (user.IsInstructor)
                 {
-                    return "El usuario ya es un instructor";
+                    return ("El usuario ya es un instructor", null);
                 }
 
                 user.IsInstructor = true;
                 var instructor = new Instructor
                 {
                     FkUser = userIdInt,
-                    User = user,
                     Occupation = "",
                     FacebookUser = "",
                     YoutubeUser = "",
@@ -42,8 +41,7 @@ namespace educat_api.Services
                 _context.Instructors.Add(instructor);
                 await _context.SaveChangesAsync();
 
-                return "Usuario convertido a instructor exitosamente";
-
+                return ("Usuario convertido a instructor exitosamente", instructor);
             } catch (Exception)
             {
                 throw;
