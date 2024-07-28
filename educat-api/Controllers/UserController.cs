@@ -1,5 +1,6 @@
 ﻿using Domain.Utilities;
 using educat_api.Services;
+using educat_api.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -12,9 +13,11 @@ namespace educat_api.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserService _service;
-        public UserController(UserService service)
+        private readonly IConfiguration _config;
+        public UserController(UserService service, IConfiguration configuration)
         {
             _service = service;
+            _config = configuration;
         }
 
         [HttpPost("convert-to-instructor")]
@@ -30,19 +33,26 @@ namespace educat_api.Controllers
                     return Forbid("Token no valido");
                 }
     
-                var result = await _service.ConvertToInstructor(userIdInt);
+                var (message, instructor) = await _service.ConvertToInstructor(userIdInt);
     
-                if (result == "Usuario no encontrado")
+                if (message == "Usuario no encontrado")
                 {
-                    return NotFound(new Response<string>(false, result));
+                    return NotFound(new Response<string>(false, message));
                 }
     
-                if (result == "El usuario ya es un instructor")
+                if (message == "El usuario ya es un instructor")
                 {
-                    return BadRequest(new Response<string>(false, result));
+                    return BadRequest(new Response<string>(false, message));
                 }
+
+                if (instructor is null)
+                {
+                    return NotFound(new Response<string>(false, "Usuario no encontrado"));
+                }
+
+                var token = TokenUtility.GenerateToken(instructor.User, 180, _config.GetSection("JWT:Key").Value ?? "");
     
-                return Ok(new Response<string>(true, result));
+                return Ok(new Response<object>(true, message, new {token}));
             } catch (Exception ex)
             {
                 return BadRequest(new Response<string>(false, ex.Message, ex.InnerException?.Message ?? ""));
