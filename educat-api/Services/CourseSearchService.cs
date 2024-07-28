@@ -62,8 +62,8 @@ namespace educat_api.Services
                         Rating = x.comments.Any() ? x.comments.Average(c => c.Score) : 0,
                         CretionDate = x.course.c.CretionDate
                     })
-                    .Skip(skip)
                     .OrderByDescending(c => c.CretionDate)
+                    .Skip(skip)
                     .Take(pageSize)
                     .ToListAsync();
 
@@ -119,8 +119,8 @@ namespace educat_api.Services
                     CretionDate = x.course.c.CretionDate
                 })
                 .Where(c => ((c.Title != null && c.Title.Contains(query)) || (c.Tags != null && c.Tags.Contains(query))) && c.Active == true && c.CategoryName == category)
-                .Skip(skip)
                 .OrderByDescending(c => c.CretionDate)
+                .Skip(skip)
                 .Take(pageSize)
                 .ToListAsync();
 
