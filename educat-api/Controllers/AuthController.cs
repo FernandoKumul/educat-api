@@ -122,7 +122,7 @@ namespace educat_api.Controllers
             }
         }
         [HttpPut("change-password")]
-        public async Task<IActionResult> ChangePassword(string token, string newPassword)
+        public async Task<IActionResult> ChangePassword(string token, [FromBody] PasswordInDTO data)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_config.GetSection("JWT:Key").Value ?? "");
@@ -145,7 +145,7 @@ namespace educat_api.Controllers
                     return BadRequest("Token no valido");
                 }
 
-                var isChanged = await _service.ChangePassword(userIdInt, newPassword);
+                var isChanged = await _service.ChangePassword(userIdInt, data.NewPassword);
 
                 if (!isChanged)
                 {
