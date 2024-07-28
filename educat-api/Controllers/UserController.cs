@@ -62,8 +62,7 @@ namespace educat_api.Controllers
             }
             if (!Int32.TryParse(id, out int idUserOut))
             {
-                return new ObjectResult(new Response<string>(false, "Token no válido"));
-
+                return new ObjectResult(new Response<string>(false, "Token no válido"))
             }
 
             try
