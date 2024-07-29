@@ -67,7 +67,8 @@ namespace educat_api.Services
                     })
                     .FirstOrDefaultAsync();
 
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -105,7 +106,7 @@ namespace educat_api.Services
                 existingCourse.Tags = updatedCourse.Tags;
                 existingCourse.UpdateDate = DateTime.Now;
 
-                foreach(var updatedUnit in  updatedCourse.Units)
+                foreach (var updatedUnit in updatedCourse.Units)
                 {
                     var idLessonsUpdateAndAdd = new List<int>();
                     var existingUnit = existingCourse.Units.FirstOrDefault(q => q.PkUnit == updatedUnit.PkUnit);
@@ -117,11 +118,11 @@ namespace educat_api.Services
                         existingUnit.Order = updatedUnit.Order;
                         idUnitsUpdateAndAdd.Add(existingUnit.PkUnit);
 
-                        foreach(var updateLesson in updatedUnit.Lessons)
+                        foreach (var updateLesson in updatedUnit.Lessons)
                         {
                             var existingLesson = existingUnit.Lessons.FirstOrDefault(l => l.PkLesson == updateLesson.PkLesson);
 
-                            if(existingLesson != null)
+                            if (existingLesson != null)
                             {
                                 //Actualizar lección
                                 existingLesson.Text = updateLesson.Text;
@@ -132,7 +133,8 @@ namespace educat_api.Services
                                 existingLesson.TimeDuration = updateLesson.TimeDuration;
                                 idLessonsUpdateAndAdd.Add(existingLesson.PkLesson);
 
-                            } else
+                            }
+                            else
                             {
                                 //Agregar nueva lección
                                 Lesson newLesson = new Lesson
@@ -174,9 +176,9 @@ namespace educat_api.Services
                         await _context.Units.AddAsync(newUnit);
                         await _context.SaveChangesAsync();
                         idUnitsUpdateAndAdd.Add(newUnit.PkUnit);
-                        
+
                         //Agregar todas sus lecciones
-                        foreach(var lesson in updatedUnit.Lessons)
+                        foreach (var lesson in updatedUnit.Lessons)
                         {
                             Lesson newLesson = new Lesson()
                             {
@@ -193,7 +195,7 @@ namespace educat_api.Services
                             await _context.Lessons.AddAsync(newLesson);
                         }
                     }
-                    
+
                 }
 
                 //Borrar unidades y lecciones
@@ -281,62 +283,63 @@ namespace educat_api.Services
                         }).ToList()
                     })
                     .FirstOrDefaultAsync();
-                } else
+                }
+                else
                 {
                     var payment = await _context.Payments.FirstOrDefaultAsync(p => p.FkUser == userId && p.FkCourse == courseId);
 
                     int paymentId = payment is null ? 0 : payment.PkPayment;
 
-                     course = await _context.Courses
-                    .Where(c => c.PkCourse == courseId && c.Active == true)
-                    .Select(c => new CoursePublicOutDTO
-                    {
-                        PkCourse = c.PkCourse,
-                        FKInstructor = c.FKInstructor,
-                        FkCategory = c.FkCategory,
-                        Title = c.Title,
-                        Summary = c.Summary,
-                        Language = c.Language,
-                        Difficulty = c.Difficulty,
-                        Price = c.Price,
-                        VideoPresentation = c.VideoPresentation,
-                        Cover = c.Cover,
-                        Requeriments = c.Requeriments,
-                        Description = c.Description,
-                        LearnText = c.LearnText,
-                        Tags = c.Tags,
-                        Active = c.Active,
-                        CretionDate = c.CretionDate,
-                        UpdateDate = c.UpdateDate,
-                        Instructor = new UserMinOutDTO
-                        {
-                            PkUser = c.Instructor.FkUser,
-                            AvatarUrl = c.Instructor.User.AvatarUrl,
-                            LastName = c.Instructor.User.LastName,
-                            Name = c.Instructor.User.Name
-                        },
-                        Units = c.Units.OrderBy(u => u.Order).Select(u => new UnitProgramOutDTO
-                        {
-                            PkUnit = u.PkUnit,
-                            FkCourse = u.FkCourse,
-                            Title = u.Title,
-                            Order = u.Order,
-                            Lessons = u.Lessons.OrderBy(u => u.Order).Select(l => new LessonProgramOutDTO
-                            {
-                                PkLesson = l.PkLesson,
-                                Title = l.Title,
-                                Fkunit = l.Fkunit,
-                                Order = l.Order,
-                                TimeDuration = l.TimeDuration,
-                                Completed = l.LessonsProgress.Any(p => p.FkPayment == paymentId),
-                                Type = l.Type,
-                                CretionDate = l.CretionDate
-                            }).ToList()
-                        }).ToList()
-                    })
-                    .FirstOrDefaultAsync();
+                    course = await _context.Courses
+                   .Where(c => c.PkCourse == courseId && c.Active == true)
+                   .Select(c => new CoursePublicOutDTO
+                   {
+                       PkCourse = c.PkCourse,
+                       FKInstructor = c.FKInstructor,
+                       FkCategory = c.FkCategory,
+                       Title = c.Title,
+                       Summary = c.Summary,
+                       Language = c.Language,
+                       Difficulty = c.Difficulty,
+                       Price = c.Price,
+                       VideoPresentation = c.VideoPresentation,
+                       Cover = c.Cover,
+                       Requeriments = c.Requeriments,
+                       Description = c.Description,
+                       LearnText = c.LearnText,
+                       Tags = c.Tags,
+                       Active = c.Active,
+                       CretionDate = c.CretionDate,
+                       UpdateDate = c.UpdateDate,
+                       Instructor = new UserMinOutDTO
+                       {
+                           PkUser = c.Instructor.FkUser,
+                           AvatarUrl = c.Instructor.User.AvatarUrl,
+                           LastName = c.Instructor.User.LastName,
+                           Name = c.Instructor.User.Name
+                       },
+                       Units = c.Units.OrderBy(u => u.Order).Select(u => new UnitProgramOutDTO
+                       {
+                           PkUnit = u.PkUnit,
+                           FkCourse = u.FkCourse,
+                           Title = u.Title,
+                           Order = u.Order,
+                           Lessons = u.Lessons.OrderBy(u => u.Order).Select(l => new LessonProgramOutDTO
+                           {
+                               PkLesson = l.PkLesson,
+                               Title = l.Title,
+                               Fkunit = l.Fkunit,
+                               Order = l.Order,
+                               TimeDuration = l.TimeDuration,
+                               Completed = l.LessonsProgress.Any(p => p.FkPayment == paymentId),
+                               Type = l.Type,
+                               CretionDate = l.CretionDate
+                           }).ToList()
+                       }).ToList()
+                   })
+                   .FirstOrDefaultAsync();
                 }
-                
+
 
                 if (course is null) return null;
 
@@ -347,7 +350,8 @@ namespace educat_api.Services
                 course.NumberStudents = students;
 
                 return course;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -360,7 +364,8 @@ namespace educat_api.Services
                 return await _context.Payments
                     .AnyAsync(c => c.FkCourse == courseId && c.FkUser == userId);
 
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -369,7 +374,7 @@ namespace educat_api.Services
         {
             try
             {
-                var findInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.FkUser == userId) 
+                var findInstructor = await _context.Instructors.FirstOrDefaultAsync(i => i.FkUser == userId)
                     ?? throw new Exception("Tu cuenta no pertenece a un instructor");
 
                 var newCourse = new Course
@@ -381,7 +386,8 @@ namespace educat_api.Services
                 await _context.Courses.AddAsync(newCourse);
                 await _context.SaveChangesAsync();
                 return newCourse.PkCourse;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -410,7 +416,8 @@ namespace educat_api.Services
                                 }).ToListAsync();
 
                 return courses;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -436,7 +443,8 @@ namespace educat_api.Services
                     })
                     .FirstOrDefaultAsync();
 
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -449,7 +457,7 @@ namespace educat_api.Services
             try
             {
                 var courseFind = await _context.Courses.FirstOrDefaultAsync(c => c.Instructor.FkUser == userId && c.PkCourse == courseId);
-                
+
                 if (courseFind == null)
                 {
                     throw new Exception("Curso no encontrado");
@@ -547,7 +555,8 @@ namespace educat_api.Services
                     .ToListAsync();
 
                 return coursesFound;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
@@ -592,30 +601,88 @@ namespace educat_api.Services
                     .ToListAsync();
 
                 return coursesFound;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 throw;
             }
         }
 
-        public string? ValidateCourse (Course course)
+        public async Task<IEnumerable<CourseSearchDTO>> GetInProcessCourses(int userId)
         {
-            if(string.IsNullOrWhiteSpace(course.Title))
+            try
+            {
+                var courses = await GetPurchasedCourses(userId);
+                foreach(CourseSearchDTO course in courses)
+                {
+                    course.Done = IsCourseDone(course.PkCourse, userId);
+                }
+
+                return courses.Where(c => c.Done == false);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+        public async Task<IEnumerable<CourseSearchDTO>> GetDoneCourses(int userId)
+        {
+            try
+            {
+                var courses = await GetPurchasedCourses(userId);
+                foreach (CourseSearchDTO course in courses)
+                {
+                    course.Done = IsCourseDone(course.PkCourse, userId);
+                }
+
+                return courses.Where(c => c.Done == true);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public bool IsCourseDone(int courseId, int userId)
+        {
+            try
+            {
+                var lessonsByCourse = _context.Lessons
+                    .Where(l => l.Unit.FkCourse == courseId)
+                    .Count();
+                var lessonsDone = _context.LessonsProgress
+                    .Where(p => p.Payment.FkUser == userId && p.Lesson.Unit.FkCourse == courseId)
+                    .Count();
+                if (lessonsDone == lessonsByCourse)
+                {
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public string? ValidateCourse(Course course)
+        {
+            if (string.IsNullOrWhiteSpace(course.Title))
             {
                 return "El título es requerido para publicar";
             }
 
-            if(string.IsNullOrWhiteSpace(course.Description))
+            if (string.IsNullOrWhiteSpace(course.Description))
             {
                 return "La descripción es requerida para publicar";
             }
-            
-            if(string.IsNullOrWhiteSpace(course.Summary))
+
+            if (string.IsNullOrWhiteSpace(course.Summary))
             {
                 return "El resumen es requerido para publicar";
             }
-            
-            if(course.Language != "spanish" && course.Language != "english")
+
+            if (course.Language != "spanish" && course.Language != "english")
             {
                 return "El lenguaje no es válido para publicar";
             }
@@ -626,7 +693,7 @@ namespace educat_api.Services
             {
                 return "La dificultad no es válida para publicar";
             }
-            
+
             if (course.Price <= 0)
             {
                 return "El precio no es válido para publicar";
@@ -636,12 +703,12 @@ namespace educat_api.Services
             {
                 return "La categoría es requerida para publicar";
             }
-            
+
             if (string.IsNullOrWhiteSpace(course.VideoPresentation))
             {
                 return "El video de presentación es requerida para publicar";
             }
-            
+
             if (string.IsNullOrWhiteSpace(course.Cover))
             {
                 return "La imagen de portada de presentación es requerida para publicar";
@@ -651,7 +718,7 @@ namespace educat_api.Services
             {
                 return "Los requerimientos son requeridos para publicar";
             }
-            
+
             if (string.IsNullOrWhiteSpace(course.Description))
             {
                 return "La descripción es requerida para publicar";
@@ -671,6 +738,6 @@ namespace educat_api.Services
             }
 
             return null;
-        } 
+        }
     }
 }
