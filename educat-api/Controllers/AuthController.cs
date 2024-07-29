@@ -57,7 +57,7 @@ namespace educat_api.Controllers
             }
         }
 
-        [HttpGet("verify-email/{token}")]
+        [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
